@@ -1,0 +1,46 @@
+{
+  "name": "vscode-gif-recorder",
+  "displayName": "VS Code GIF Recorder",
+  "description": "Record your VS Code actions and export them as GIFs",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vscode-gif-recorder.startRecording",
+    "onCommand:vscode-gif-recorder.stopRecording"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-gif-recorder.startRecording",
+        "title": "GIF Recorder: Start Recording"
+      },
+      {
+        "command": "vscode-gif-recorder.stopRecording",
+        "title": "GIF Recorder: Stop Recording"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}
