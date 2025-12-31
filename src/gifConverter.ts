@@ -75,22 +75,29 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
   encoder.setQuality(quality);
 
   // Process and add each frame
+  let framesAdded = 0;
   for (let i = 0; i < frames.length; i++) {
     try {
       const png = PNG.sync.read(frames[i].data);
       
       // Ensure frame has the same dimensions
       if (png.width !== width || png.height !== height) {
-        console.warn(`Frame ${i} has different dimensions, skipping...`);
+        console.warn(`Frame ${i} has different dimensions (${png.width}x${png.height} vs ${width}x${height}), skipping...`);
         continue;
       }
 
       // Add frame to encoder (data is RGBA format)
       encoder.addFrame(png.data);
-      console.log(`Added frame ${i + 1}/${frames.length}`);
+      framesAdded++;
+      console.log(`Added frame ${framesAdded}/${frames.length}`);
     } catch (error) {
       console.error(`Error processing frame ${i}:`, error);
     }
+  }
+
+  // Ensure at least some frames were successfully added
+  if (framesAdded === 0) {
+    throw new Error('No frames could be processed for GIF conversion');
   }
 
   encoder.finish();

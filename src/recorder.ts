@@ -8,7 +8,7 @@ import { Frame } from './gifConverter';
 let isRecording = false;
 let captureInterval: NodeJS.Timeout | null = null;
 let frames: Frame[] = [];
-const DEFAULT_FPS = 10;
+export const DEFAULT_FPS = 10;
 
 /**
  * Starts recording the VS Code window.
@@ -34,11 +34,12 @@ export function startRecording(): void {
       const imageBuffer = await screenshot({ format: 'png' });
       
       // Store frame with timestamp
+      // Width and height are set to 0 and will be determined during GIF conversion
       const frame: Frame = {
-        data: imageBuffer as Buffer,
+        data: imageBuffer,
         timestamp: Date.now(),
-        width: 0, // Will be determined during GIF conversion
-        height: 0  // Will be determined during GIF conversion
+        width: 0,
+        height: 0
       };
       
       frames.push(frame);

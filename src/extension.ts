@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { startRecording, stopRecording } from './recorder';
+import { startRecording, stopRecording, DEFAULT_FPS } from './recorder';
 import { convertToGif } from './gifConverter';
 import * as path from 'path';
 import * as os from 'os';
@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.startRecording',
     () => {
       startRecording();
-      vscode.window.showInformationMessage('GIF recording started! Capturing screen at 10 FPS...');
+      vscode.window.showInformationMessage(`GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`);
     }
   );
 
