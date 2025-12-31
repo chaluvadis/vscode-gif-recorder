@@ -3,6 +3,7 @@
   "displayName": "VS Code GIF Recorder",
   "description": "Record your VS Code actions and export them as GIFs",
   "version": "0.0.1",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.80.0"
   },
