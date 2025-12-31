@@ -97,7 +97,6 @@ This extension is now **fully functional** with the following features implement
 - **Frame buffering and management in memory**
 - **GIF encoding and conversion with gif-encoder-2**
 - **File save dialog integration**
-- **Auto-save to Downloads folder with default name when save dialog is cancelled**
 - **Progress indicators during conversion**
 - **Representative logo for the extension**
 - **TypeScript type definitions organized in dedicated types folder**
@@ -124,11 +123,10 @@ This extension is now **fully functional** with the following features implement
 3. **Stop Recording**: 
    - Open the Command Palette again
    - Run `GIF Recorder: Stop Recording`
-   - A save dialog will appear to choose your save location
+   - A save dialog will appear
 
 4. **Save Your GIF**: 
-   - Choose a location and filename for your GIF, or simply close the dialog
-   - If you close the dialog without choosing a location, the GIF will be saved automatically to your Downloads folder with a default name (e.g., `recording-1234567890.gif`)
+   - Choose a location and filename for your GIF
    - The extension will process the frames and create your GIF
    - Once complete, you'll get an option to open the file
 

@@ -45,8 +45,10 @@ export function activate(context: vscode.ExtensionContext) {
         saveLabel: 'Save GIF'
       });
 
-      // If user cancels, save to default location
-      const outputPath = saveUri ? saveUri.fsPath : defaultPath;
+      if (!saveUri) {
+        vscode.window.showInformationMessage('GIF save cancelled.');
+        return;
+      }
 
       // Show progress while converting
       await vscode.window.withProgress(
@@ -59,8 +61,8 @@ export function activate(context: vscode.ExtensionContext) {
           progress.report({ increment: 0, message: 'Processing frames...' });
           
           try {
-            const finalOutputPath = await convertToGif(frames, {
-              outputPath: outputPath,
+            const outputPath = await convertToGif(frames, {
+              outputPath: saveUri.fsPath,
               fps: 10,
               quality: 10
             });
@@ -69,12 +71,12 @@ export function activate(context: vscode.ExtensionContext) {
             
             const openAction = 'Open File';
             const result = await vscode.window.showInformationMessage(
-              `GIF saved successfully to ${finalOutputPath}`,
+              `GIF saved successfully to ${outputPath}`,
               openAction
             );
 
             if (result === openAction) {
-              vscode.env.openExternal(vscode.Uri.file(finalOutputPath));
+              vscode.env.openExternal(vscode.Uri.file(outputPath));
             }
           } catch (error) {
             vscode.window.showErrorMessage(
