@@ -29,6 +29,9 @@ vscode-gif-recorder/
 │   ├── extension.ts          # Main entry point
 │   ├── recorder.ts           # Implements recording logic
 │   └── gifConverter.ts       # Logic for converting frames to GIFs
+├── types/
+│   ├── gif-encoder-2.d.ts    # Type definitions for gif-encoder-2
+│   └── screenshot-desktop.d.ts # Type definitions for screenshot-desktop
 ├── media/
 │   └── icon.png              # Extension icon or other media
 ├── out/                      # Compiled output
@@ -96,6 +99,7 @@ This extension is now **fully functional** with the following features implement
 - **File save dialog integration**
 - **Progress indicators during conversion**
 - **Representative logo for the extension**
+- **TypeScript type definitions organized in dedicated types folder**
 
 ### 🚧 Future Enhancements
 - User settings and preferences for FPS and quality
