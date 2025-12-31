@@ -2,6 +2,11 @@
  * GIF Converter module for converting captured frames to GIF format.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
+import GIFEncoder from 'gif-encoder-2';
+import { PNG } from 'pngjs';
+
 /**
  * Frame data structure representing a single captured frame.
  */
@@ -23,23 +28,84 @@ export interface GifOptions {
 
 /**
  * Converts an array of frames to a GIF file.
- * This is a stub implementation that will be expanded in the future.
+ * Uses GIF encoding library to process frames with user-specified options.
  *
  * @param frames - Array of captured frames to convert
- * @param options - Options for GIF generation
+ * @param options - Options for GIF generation (FPS, Quality, Output Path)
  * @returns Promise that resolves to the path of the generated GIF
  */
 export async function convertToGif(frames: Frame[], options: GifOptions): Promise<string> {
+  if (!frames || frames.length === 0) {
+    throw new Error('No frames to convert');
+  }
+
+  const fps = options.fps || 10;
+  const quality = options.quality || 10; // Lower is better (1-20)
+  const delay = Math.floor(1000 / fps); // Delay between frames in ms
+
   console.log(`Converting ${frames.length} frames to GIF...`);
   console.log(`Output path: ${options.outputPath}`);
-  console.log(`FPS: ${options.fps || 10}`);
-  console.log(`Quality: ${options.quality || 80}`);
+  console.log(`FPS: ${fps}`);
+  console.log(`Quality: ${quality}`);
 
-  // TODO: Implement actual GIF conversion logic
-  // - Process frames
-  // - Use a GIF encoding library (e.g., gifencoder)
-  // - Write to output file
-  // - Return the file path
+  // Ensure output directory exists
+  const outputDir = path.dirname(options.outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  // Decode the first frame to get dimensions
+  const firstPng = PNG.sync.read(frames[0].data);
+  const width = firstPng.width;
+  const height = firstPng.height;
+
+  console.log(`GIF dimensions: ${width}x${height}`);
+
+  // Create GIF encoder
+  const encoder = new GIFEncoder(width, height);
+  
+  // Create write stream
+  const writeStream = fs.createWriteStream(options.outputPath);
+
+  // Start the encoder and pipe to file
+  encoder.createReadStream().pipe(writeStream);
+  encoder.start();
+  encoder.setRepeat(0); // 0 for repeat, -1 for no-repeat
+  encoder.setDelay(delay);
+  encoder.setQuality(quality);
+
+  // Process and add each frame
+  for (let i = 0; i < frames.length; i++) {
+    try {
+      const png = PNG.sync.read(frames[i].data);
+      
+      // Ensure frame has the same dimensions
+      if (png.width !== width || png.height !== height) {
+        console.warn(`Frame ${i} has different dimensions, skipping...`);
+        continue;
+      }
+
+      // Add frame to encoder (data is RGBA format)
+      encoder.addFrame(png.data);
+      console.log(`Added frame ${i + 1}/${frames.length}`);
+    } catch (error) {
+      console.error(`Error processing frame ${i}:`, error);
+    }
+  }
+
+  encoder.finish();
+
+  // Wait for the write stream to finish
+  await new Promise<void>((resolve, reject) => {
+    writeStream.on('finish', () => {
+      console.log(`GIF successfully created at: ${options.outputPath}`);
+      resolve();
+    });
+    writeStream.on('error', (error) => {
+      console.error('Error writing GIF:', error);
+      reject(error);
+    });
+  });
 
   return options.outputPath;
 }

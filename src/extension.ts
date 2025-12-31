@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { startRecording, stopRecording } from './recorder';
+import { convertToGif } from './gifConverter';
+import * as path from 'path';
+import * as os from 'os';
 
 /**
  * This method is called when the extension is activated.
@@ -13,16 +16,76 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.startRecording',
     () => {
       startRecording();
-      vscode.window.showInformationMessage('GIF recording started!');
+      vscode.window.showInformationMessage('GIF recording started! Capturing screen at 10 FPS...');
     }
   );
 
   // Register the stop recording command
   const stopRecordingCommand = vscode.commands.registerCommand(
     'vscode-gif-recorder.stopRecording',
-    () => {
-      stopRecording();
-      vscode.window.showInformationMessage('GIF recording stopped!');
+    async () => {
+      const frames = stopRecording();
+      
+      if (frames.length === 0) {
+        vscode.window.showWarningMessage('No frames were captured. Recording may not have been started.');
+        return;
+      }
+
+      vscode.window.showInformationMessage(`Recording stopped! Captured ${frames.length} frames.`);
+
+      // Show save dialog for output file
+      const defaultFileName = `recording-${Date.now()}.gif`;
+      const defaultPath = path.join(os.homedir(), 'Downloads', defaultFileName);
+      
+      const saveUri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(defaultPath),
+        filters: {
+          'GIF files': ['gif']
+        },
+        saveLabel: 'Save GIF'
+      });
+
+      if (!saveUri) {
+        vscode.window.showInformationMessage('GIF save cancelled.');
+        return;
+      }
+
+      // Show progress while converting
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Converting to GIF',
+          cancellable: false
+        },
+        async (progress) => {
+          progress.report({ increment: 0, message: 'Processing frames...' });
+          
+          try {
+            const outputPath = await convertToGif(frames, {
+              outputPath: saveUri.fsPath,
+              fps: 10,
+              quality: 10
+            });
+
+            progress.report({ increment: 100, message: 'Complete!' });
+            
+            const openAction = 'Open File';
+            const result = await vscode.window.showInformationMessage(
+              `GIF saved successfully to ${outputPath}`,
+              openAction
+            );
+
+            if (result === openAction) {
+              vscode.env.openExternal(vscode.Uri.file(outputPath));
+            }
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              `Failed to create GIF: ${error instanceof Error ? error.message : String(error)}`
+            );
+            console.error('GIF conversion error:', error);
+          }
+        }
+      );
     }
   );
 
