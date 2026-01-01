@@ -23,6 +23,7 @@ export function startRecording(): void {
 
   console.log('Starting GIF recording...');
   isRecording = true;
+  isPaused = false;
   frames = []; // Clear any existing frames
 
   // Calculate interval based on desired FPS
@@ -89,7 +90,7 @@ export function stopRecording(): Frame[] {
 
 /**
  * Pauses the ongoing recording.
- * Frame capture continues but frames are not added while paused.
+ * The capture interval continues but frames are skipped while paused.
  */
 export function pauseRecording(): void {
   if (!isRecording) {
