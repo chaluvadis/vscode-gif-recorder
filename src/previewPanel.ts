@@ -8,6 +8,7 @@ import { Frame } from './gifConverter';
 let currentPanel: vscode.WebviewPanel | undefined;
 let currentFrames: Frame[] = [];
 let previewCallback: ((action: 'save' | 'discard') => void) | undefined;
+const frameCache: Map<number, string> = new Map();
 
 /**
  * Shows a preview of the recorded frames in a webview panel.
@@ -16,9 +17,16 @@ let previewCallback: ((action: 'save' | 'discard') => void) | undefined;
  * @returns Promise that resolves with 'save' or 'discard' based on user action
  */
 export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> {
+  // Prevent concurrent preview calls
+  if (currentPanel && previewCallback) {
+    vscode.window.showWarningMessage('A preview is already open. Please close it before starting a new preview.');
+    throw new Error('Preview already active');
+  }
+
   return new Promise((resolve) => {
     currentFrames = frames;
     previewCallback = resolve;
+    frameCache.clear(); // Clear cache for new preview
 
     if (currentPanel) {
       // If panel already exists, reveal it
@@ -38,6 +46,7 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
       // Handle panel disposal
       currentPanel.onDidDispose(() => {
         currentPanel = undefined;
+        frameCache.clear(); // Clear cache to free memory
         if (previewCallback) {
           previewCallback('discard');
           previewCallback = undefined;
@@ -80,14 +89,22 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
 
 /**
  * Sends a specific frame to the webview for display.
+ * Uses caching to avoid repeated base64 encoding of the same frame.
  */
 function sendFrameToWebview(index: number): void {
   if (!currentPanel || index < 0 || index >= currentFrames.length) {
     return;
   }
 
-  const frame = currentFrames[index];
-  const base64Image = frame.data.toString('base64');
+  // Check cache first
+  let base64Image = frameCache.get(index);
+  
+  if (!base64Image) {
+    // Encode and cache if not already cached
+    const frame = currentFrames[index];
+    base64Image = frame.data.toString('base64');
+    frameCache.set(index, base64Image);
+  }
   
   currentPanel.webview.postMessage({
     command: 'displayFrame',
