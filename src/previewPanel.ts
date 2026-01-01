@@ -4,6 +4,7 @@
 
 import * as vscode from 'vscode';
 import { Frame } from './gifConverter';
+import { DEFAULT_FPS } from './recorder';
 
 let currentPanel: vscode.WebviewPanel | undefined;
 let currentFrames: Frame[] = [];
@@ -19,7 +20,7 @@ const frameCache: Map<number, string> = new Map();
 export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> {
   // Prevent concurrent preview calls
   if (currentPanel && previewCallback) {
-    vscode.window.showWarningMessage('A preview is already open. Please close it before starting a new preview.');
+    vscode.window.showWarningMessage('A preview is already open. Please save or discard the current recording first.');
     throw new Error('Preview already active');
   }
 
@@ -380,7 +381,7 @@ function getWebviewContent(webview: vscode.Webview, frameCount: number): string 
                 currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
                 requestFrame(currentFrameIndex);
                 updateFrameInfo();
-            }, 100); // 10 FPS playback
+            }, ${Math.floor(1000 / DEFAULT_FPS)}); // Playback at recording FPS
         }
         
         function stopPlayback() {
