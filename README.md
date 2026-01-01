@@ -6,7 +6,7 @@
   <p><strong>A Visual Studio Code extension for recording your coding sessions and exporting them as GIF animations.</strong></p>
   
   ![License](https://img.shields.io/github/license/chaluvadis/vscode-gif-recorder)
-  ![Version](https://img.shields.io/badge/version-0.0.1-blue)
+  ![Version](https://img.shields.io/github/package-json/v/chaluvadis/vscode-gif-recorder)
   ![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-007ACC?logo=visual-studio-code)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?logo=node.js)
 </div>
