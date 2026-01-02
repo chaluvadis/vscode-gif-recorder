@@ -6,6 +6,7 @@ import screenshot from 'screenshot-desktop';
 import { Frame } from './gifConverter';
 
 let isRecording = false;
+let isPaused = false;
 let captureInterval: NodeJS.Timeout | null = null;
 let frames: Frame[] = [];
 export const DEFAULT_FPS = 10;
@@ -22,6 +23,7 @@ export function startRecording(): void {
 
   console.log('Starting GIF recording...');
   isRecording = true;
+  isPaused = false;
   frames = []; // Clear any existing frames
 
   // Calculate interval based on desired FPS
@@ -29,6 +31,11 @@ export function startRecording(): void {
 
   // Set up recording interval to capture frames
   captureInterval = setInterval(async () => {
+    // Skip capturing if recording is paused
+    if (isPaused) {
+      return;
+    }
+    
     try {
       // Capture screenshot as PNG buffer
       const imageBuffer = await screenshot({ format: 'png' });
@@ -64,6 +71,7 @@ export function stopRecording(): Frame[] {
 
   console.log('Stopping GIF recording...');
   isRecording = false;
+  isPaused = false;
 
   // Stop capturing frames
   if (captureInterval) {
@@ -81,10 +89,54 @@ export function stopRecording(): Frame[] {
 }
 
 /**
+ * Pauses the ongoing recording.
+ * The capture interval continues but frames are skipped while paused.
+ */
+export function pauseRecording(): void {
+  if (!isRecording) {
+    console.log('No recording in progress to pause.');
+    return;
+  }
+
+  if (isPaused) {
+    console.log('Recording is already paused.');
+    return;
+  }
+
+  console.log('Pausing GIF recording...');
+  isPaused = true;
+}
+
+/**
+ * Resumes a paused recording.
+ */
+export function resumeRecording(): void {
+  if (!isRecording) {
+    console.log('No recording in progress to resume.');
+    return;
+  }
+
+  if (!isPaused) {
+    console.log('Recording is not paused.');
+    return;
+  }
+
+  console.log('Resuming GIF recording...');
+  isPaused = false;
+}
+
+/**
  * Returns the current recording status.
  */
 export function getRecordingStatus(): boolean {
   return isRecording;
+}
+
+/**
+ * Returns the current paused status.
+ */
+export function getPausedStatus(): boolean {
+  return isPaused;
 }
 
 /**
