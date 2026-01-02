@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { startRecording, stopRecording, pauseRecording, resumeRecording, DEFAULT_FPS } from './recorder';
 import { convertToGif } from './gifConverter';
+import { showPreview } from './previewPanel';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -32,6 +33,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       vscode.window.showInformationMessage(`Recording stopped! Captured ${frames.length} frames.`);
+
+      // Show preview and wait for user decision
+      const userAction = await showPreview(frames);
+      
+      if (userAction === 'discard') {
+        vscode.window.showInformationMessage('Recording discarded.');
+        return;
+      }
 
       // Show save dialog for output file
       const defaultFileName = `recording-${Date.now()}.gif`;

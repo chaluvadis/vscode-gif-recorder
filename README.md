@@ -30,6 +30,7 @@ vscode-gif-recorder/
 │   ├── extension.ts          # Main entry point
 │   ├── recorder.ts           # Implements recording logic
 │   ├── gifConverter.ts       # Logic for converting frames to GIFs
+│   ├── previewPanel.ts       # Preview webview panel for recordings
 │   └── types/
 │       ├── gif-encoder-2.d.ts    # Type definitions for gif-encoder-2
 │       └── screenshot-desktop.d.ts # Type definitions for screenshot-desktop
@@ -99,6 +100,7 @@ This extension is now **fully functional** with the following features implement
 - **Screen capture mechanism using screenshot-desktop**
 - **Frame buffering and management in memory**
 - **GIF encoding and conversion with gif-encoder-2**
+- **Recording preview with interactive playback controls**
 - **File save dialog integration**
 - **Progress indicators during conversion**
 - **Representative logo for the extension**
@@ -109,7 +111,7 @@ This extension is now **fully functional** with the following features implement
 - User settings and preferences for FPS and quality
 - Enhanced UI for recording controls
 - Region selection for partial screen recording
-- Recording preview
+- Pause/resume functionality
 - Support for custom frame rates via settings
 
 ## 🚀 Usage
@@ -132,9 +134,16 @@ This extension is now **fully functional** with the following features implement
 4. **Stop Recording**: 
    - Open the Command Palette again
    - Run `GIF Recorder: Stop Recording`
-   - A save dialog will appear
+   - A preview panel will open showing your recording
+
+4. **Preview Your Recording**:
+   - Use the slider to navigate through individual frames
+   - Click the Play button to see the animation
+   - Review the recording before deciding to save or discard
 
 5. **Save Your GIF**: 
+   - Click "Save as GIF" in the preview panel
+   - A save dialog will appear
    - Choose a location and filename for your GIF
    - The extension will process the frames and create your GIF
    - Once complete, you'll get an option to open the file
@@ -145,7 +154,7 @@ This extension is now **fully functional** with the following features implement
 The main entry point that handles:
 - Extension activation/deactivation
 - Command registration
-- Integration between recorder and converter modules
+- Integration between recorder, preview, and converter modules
 - File save dialog and user interaction
 - Progress reporting during GIF conversion
 
@@ -163,6 +172,13 @@ Manages GIF creation:
 - Configurable quality and frame rate options
 - File I/O operations with proper error handling
 
+### previewPanel.ts
+Handles the recording preview functionality:
+- `showPreview()`: Displays recorded frames in a webview panel
+- Interactive frame navigation with slider control
+- Playback functionality to preview the animation
+- Save or discard actions with user feedback
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
@@ -175,9 +191,9 @@ This project is licensed under the MIT License.
 
 - [x] Implement screen capture using native APIs
 - [x] Add GIF encoding library integration
-- [x] Implement pause/resume functionality
+- [x] Add recording preview
 - [ ] Create settings page for customization
-- [ ] Add recording preview
+- [ ] Implement pause/resume functionality
 - [ ] Add support for custom frame rates via settings
 - [ ] Add support for region selection
 - [ ] Publish to VS Code Marketplace
@@ -188,6 +204,7 @@ This project is licensed under the MIT License.
 This extension was enhanced with full implementation of recording and GIF conversion features, including:
 - Complete screen capture functionality
 - GIF encoding with configurable quality
+- Interactive preview with playback controls
 - User-friendly file save dialog
 - Progress tracking and error handling
 - Extension logo design
