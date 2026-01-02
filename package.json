@@ -12,7 +12,9 @@
   ],
   "activationEvents": [
     "onCommand:vscode-gif-recorder.startRecording",
-    "onCommand:vscode-gif-recorder.stopRecording"
+    "onCommand:vscode-gif-recorder.stopRecording",
+    "onCommand:vscode-gif-recorder.pauseRecording",
+    "onCommand:vscode-gif-recorder.resumeRecording"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -24,6 +26,14 @@
       {
         "command": "vscode-gif-recorder.stopRecording",
         "title": "GIF Recorder: Stop Recording"
+      },
+      {
+        "command": "vscode-gif-recorder.pauseRecording",
+        "title": "GIF Recorder: Pause Recording"
+      },
+      {
+        "command": "vscode-gif-recorder.resumeRecording",
+        "title": "GIF Recorder: Resume Recording"
       }
     ]
   },
