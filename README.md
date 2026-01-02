@@ -4,6 +4,11 @@
   <img src="media/logo.svg" alt="VS Code GIF Recorder Logo" width="128" height="128">
   
   <p><strong>A Visual Studio Code extension for recording your coding sessions and exporting them as GIF animations.</strong></p>
+  
+  ![License](https://img.shields.io/github/license/chaluvadis/vscode-gif-recorder)
+  ![Version](https://img.shields.io/github/package-json/v/chaluvadis/vscode-gif-recorder)
+  ![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-007ACC?logo=visual-studio-code)
+  ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?logo=node.js)
 </div>
 
 ## Overview
@@ -181,11 +186,48 @@ Handles the recording preview functionality:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+We welcome contributions from the community! Whether it's bug reports, feature requests, or code contributions, your input helps make this extension better.
+
+### How to Contribute
+
+Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Setting up your development environment
+- Our code of conduct
+- The process for submitting pull requests
+- Coding standards and best practices
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes and test thoroughly
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to your branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+For questions or discussions, feel free to open an issue or start a discussion on GitHub.
+
+## Known Issues
+
+### Current Limitations
+
+- **Platform Compatibility**: Screen capture currently works best on Windows and macOS. Linux support may have limitations depending on the desktop environment.
+- **Performance**: Recording at high frame rates (>15 FPS) may impact VS Code performance on lower-end systems.
+- **File Size**: GIF files can become large for long recordings. Consider keeping recordings under 30 seconds for optimal file sizes.
+- **Screen Resolution**: Very high resolution displays may result in larger GIF files. A settings feature for resolution scaling is planned.
+
+### Known Bugs
+
+- Recording may not capture cursor movements in some scenarios
+- Stop recording command may require a second invocation if the first attempt times out
+
+If you encounter any issues not listed here, please [report them on GitHub](https://github.com/chaluvadis/vscode-gif-recorder/issues).
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2025 chaluvadis
 
 ## Roadmap
 
