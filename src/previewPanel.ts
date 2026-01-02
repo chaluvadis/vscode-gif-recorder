@@ -81,7 +81,7 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
     }
 
     // Set the webview content
-    currentPanel.webview.html = getWebviewContent(currentPanel.webview, frames.length);
+    currentPanel.webview.html = getWebviewContent(frames.length);
 
     // Send first frame
     sendFrameToWebview(0);
@@ -118,7 +118,7 @@ function sendFrameToWebview(index: number): void {
 /**
  * Generates the HTML content for the webview.
  */
-function getWebviewContent(webview: vscode.Webview, frameCount: number): string {
+function getWebviewContent(frameCount: number): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
