@@ -13,6 +13,7 @@ VS Code GIF Recorder allows you to capture your development workflow in VS Code 
 ## ✨ Features
 
 - 🎥 **Screen Recording** - Captures your VS Code window at 10 FPS
+- ⏸️ **Pause/Resume** - Pause and resume recordings on the fly
 - 🎨 **GIF Conversion** - Converts recordings to high-quality GIF files
 - ⚙️ **Configurable Quality** - Adjustable quality settings for optimal file size
 - 💾 **Easy Export** - Save dialog integration for convenient file saving
@@ -76,6 +77,8 @@ vscode-gif-recorder/
 3. A new Extension Development Host window will open
 4. Use the commands:
    - `GIF Recorder: Start Recording` - Begin recording
+   - `GIF Recorder: Pause Recording` - Pause recording
+   - `GIF Recorder: Resume Recording` - Resume recording
    - `GIF Recorder: Stop Recording` - Stop recording
 
 ### Available Commands
@@ -92,7 +95,7 @@ This extension is now **fully functional** with the following features implement
 ### ✅ Completed
 - Project structure and configuration files
 - Extension activation lifecycle
-- Command registration (start/stop recording)
+- Command registration (start/stop/pause/resume recording)
 - **Screen capture mechanism using screenshot-desktop**
 - **Frame buffering and management in memory**
 - **GIF encoding and conversion with gif-encoder-2**
@@ -100,12 +103,12 @@ This extension is now **fully functional** with the following features implement
 - **Progress indicators during conversion**
 - **Representative logo for the extension**
 - **TypeScript type definitions organized in dedicated types folder**
+- **Pause/resume functionality for recordings**
 
 ### 🚧 Future Enhancements
 - User settings and preferences for FPS and quality
 - Enhanced UI for recording controls
 - Region selection for partial screen recording
-- Pause/resume functionality
 - Recording preview
 - Support for custom frame rates via settings
 
@@ -120,12 +123,18 @@ This extension is now **fully functional** with the following features implement
    - Work in VS Code as normal - all your actions are being recorded
    - The extension captures your entire screen
 
-3. **Stop Recording**: 
+3. **Pause/Resume** (Optional):
+   - Open the Command Palette
+   - Run `GIF Recorder: Pause Recording` to temporarily pause capture
+   - Run `GIF Recorder: Resume Recording` to continue capturing
+   - Use this feature to exclude unwanted portions from your recording
+
+4. **Stop Recording**: 
    - Open the Command Palette again
    - Run `GIF Recorder: Stop Recording`
    - A save dialog will appear
 
-4. **Save Your GIF**: 
+5. **Save Your GIF**: 
    - Choose a location and filename for your GIF
    - The extension will process the frames and create your GIF
    - Once complete, you'll get an option to open the file
@@ -166,9 +175,9 @@ This project is licensed under the MIT License.
 
 - [x] Implement screen capture using native APIs
 - [x] Add GIF encoding library integration
+- [x] Implement pause/resume functionality
 - [ ] Create settings page for customization
 - [ ] Add recording preview
-- [ ] Implement pause/resume functionality
 - [ ] Add support for custom frame rates via settings
 - [ ] Add support for region selection
 - [ ] Publish to VS Code Marketplace

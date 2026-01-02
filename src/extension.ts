@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { startRecording, stopRecording, DEFAULT_FPS } from './recorder';
+import { startRecording, stopRecording, pauseRecording, resumeRecording, DEFAULT_FPS } from './recorder';
 import { convertToGif } from './gifConverter';
 import * as path from 'path';
 import * as os from 'os';
@@ -89,8 +89,28 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register the pause recording command
+  const pauseRecordingCommand = vscode.commands.registerCommand(
+    'vscode-gif-recorder.pauseRecording',
+    () => {
+      pauseRecording();
+      vscode.window.showInformationMessage('GIF recording paused.');
+    }
+  );
+
+  // Register the resume recording command
+  const resumeRecordingCommand = vscode.commands.registerCommand(
+    'vscode-gif-recorder.resumeRecording',
+    () => {
+      resumeRecording();
+      vscode.window.showInformationMessage('GIF recording resumed!');
+    }
+  );
+
   context.subscriptions.push(startRecordingCommand);
   context.subscriptions.push(stopRecordingCommand);
+  context.subscriptions.push(pauseRecordingCommand);
+  context.subscriptions.push(resumeRecordingCommand);
 }
 
 /**
