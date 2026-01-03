@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Frame } from './gifConverter';
+import type { Frame } from './gifConverter';
 import { DEFAULT_FPS } from './recorder';
 
 let currentPanel: vscode.WebviewPanel | undefined;
@@ -13,7 +13,7 @@ const frameCache: Map<number, string> = new Map();
 
 /**
  * Shows a preview of the recorded frames in a webview panel.
- * 
+ *
  * @param frames - Array of captured frames to preview
  * @returns Promise that resolves with 'save' or 'discard' based on user action
  */
@@ -99,14 +99,14 @@ function sendFrameToWebview(index: number): void {
 
   // Check cache first
   let base64Image = frameCache.get(index);
-  
+
   if (!base64Image) {
     // Encode and cache if not already cached
     const frame = currentFrames[index];
     base64Image = frame.data.toString('base64');
     frameCache.set(index, base64Image);
   }
-  
+
   currentPanel.webview.postMessage({
     command: 'displayFrame',
     index: index,
@@ -136,25 +136,25 @@ function getWebviewContent(frameCount: number): string {
             flex-direction: column;
             height: 100vh;
         }
-        
+
         .header {
             padding: 20px;
             background-color: var(--vscode-editor-background);
             border-bottom: 1px solid var(--vscode-panel-border);
         }
-        
+
         .header h1 {
             margin: 0 0 10px 0;
             font-size: 24px;
             font-weight: 600;
         }
-        
+
         .header p {
             margin: 0;
             color: var(--vscode-descriptionForeground);
             font-size: 14px;
         }
-        
+
         .preview-container {
             flex: 1;
             display: flex;
@@ -164,7 +164,7 @@ function getWebviewContent(frameCount: number): string {
             overflow: auto;
             background-color: var(--vscode-editor-background);
         }
-        
+
         .preview-image {
             max-width: 100%;
             max-height: 100%;
@@ -172,7 +172,7 @@ function getWebviewContent(frameCount: number): string {
             border: 1px solid var(--vscode-panel-border);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
-        
+
         .controls {
             padding: 20px;
             background-color: var(--vscode-editor-background);
@@ -181,20 +181,20 @@ function getWebviewContent(frameCount: number): string {
             flex-direction: column;
             gap: 15px;
         }
-        
+
         .playback-controls {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .slider-container {
             flex: 1;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .frame-slider {
             flex: 1;
             height: 4px;
@@ -204,7 +204,7 @@ function getWebviewContent(frameCount: number): string {
             outline: none;
             border-radius: 2px;
         }
-        
+
         .frame-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -214,7 +214,7 @@ function getWebviewContent(frameCount: number): string {
             cursor: pointer;
             border-radius: 50%;
         }
-        
+
         .frame-slider::-moz-range-thumb {
             width: 16px;
             height: 16px;
@@ -223,20 +223,20 @@ function getWebviewContent(frameCount: number): string {
             border-radius: 50%;
             border: none;
         }
-        
+
         .frame-info {
             color: var(--vscode-descriptionForeground);
             font-size: 13px;
             min-width: 100px;
             text-align: right;
         }
-        
+
         .action-buttons {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
         }
-        
+
         button {
             padding: 8px 16px;
             font-size: 13px;
@@ -246,35 +246,35 @@ function getWebviewContent(frameCount: number): string {
             font-family: var(--vscode-font-family);
             transition: background-color 0.1s;
         }
-        
+
         .play-button {
             padding: 8px 20px;
             background-color: var(--vscode-button-secondaryBackground);
             color: var(--vscode-button-secondaryForeground);
         }
-        
+
         .play-button:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
         }
-        
+
         .save-button {
             background-color: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
         }
-        
+
         .save-button:hover {
             background-color: var(--vscode-button-hoverBackground);
         }
-        
+
         .discard-button {
             background-color: var(--vscode-button-secondaryBackground);
             color: var(--vscode-button-secondaryForeground);
         }
-        
+
         .discard-button:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
         }
-        
+
         .loading {
             text-align: center;
             color: var(--vscode-descriptionForeground);
@@ -287,12 +287,12 @@ function getWebviewContent(frameCount: number): string {
         <h1>🎬 Recording Preview</h1>
         <p>Review your recording before saving. Use the slider to navigate through frames or play the animation.</p>
     </div>
-    
+
     <div class="preview-container">
         <img id="previewImage" class="preview-image" alt="Preview frame" />
         <div id="loading" class="loading">Loading preview...</div>
     </div>
-    
+
     <div class="controls">
         <div class="playback-controls">
             <button id="playButton" class="play-button">▶ Play</button>
@@ -301,20 +301,20 @@ function getWebviewContent(frameCount: number): string {
                 <span id="frameInfo" class="frame-info">Frame 1 / ${frameCount}</span>
             </div>
         </div>
-        
+
         <div class="action-buttons">
             <button id="discardButton" class="discard-button">Discard Recording</button>
             <button id="saveButton" class="save-button">Save as GIF</button>
         </div>
     </div>
-    
+
     <script>
         const vscode = acquireVsCodeApi();
         let currentFrameIndex = 0;
         let totalFrames = ${frameCount};
         let isPlaying = false;
         let playInterval = null;
-        
+
         const previewImage = document.getElementById('previewImage');
         const loading = document.getElementById('loading');
         const frameSlider = document.getElementById('frameSlider');
@@ -322,7 +322,7 @@ function getWebviewContent(frameCount: number): string {
         const playButton = document.getElementById('playButton');
         const saveButton = document.getElementById('saveButton');
         const discardButton = document.getElementById('discardButton');
-        
+
         // Handle messages from the extension
         window.addEventListener('message', event => {
             const message = event.data;
@@ -335,16 +335,16 @@ function getWebviewContent(frameCount: number): string {
                 updateFrameInfo();
             }
         });
-        
+
         // Request initial frame
         vscode.postMessage({ command: 'getFrame', index: 0 });
-        
+
         // Frame slider handler
         frameSlider.addEventListener('input', (e) => {
             const index = parseInt(e.target.value);
             requestFrame(index);
         });
-        
+
         // Play/Pause button handler
         playButton.addEventListener('click', () => {
             if (isPlaying) {
@@ -353,37 +353,37 @@ function getWebviewContent(frameCount: number): string {
                 startPlayback();
             }
         });
-        
+
         // Save button handler
         saveButton.addEventListener('click', () => {
             vscode.postMessage({ command: 'save' });
         });
-        
+
         // Discard button handler
         discardButton.addEventListener('click', () => {
             vscode.postMessage({ command: 'discard' });
         });
-        
+
         function requestFrame(index) {
             vscode.postMessage({ command: 'getFrame', index: index });
         }
-        
+
         function updateFrameInfo() {
             frameInfo.textContent = \`Frame \${currentFrameIndex + 1} / \${totalFrames}\`;
             frameSlider.value = currentFrameIndex;
         }
-        
+
         function startPlayback() {
             isPlaying = true;
             playButton.textContent = '⏸ Pause';
-            
+
             playInterval = setInterval(() => {
                 currentFrameIndex = (currentFrameIndex + 1) % totalFrames;
                 requestFrame(currentFrameIndex);
                 updateFrameInfo();
             }, ${Math.floor(1000 / DEFAULT_FPS)}); // Playback at recording FPS
         }
-        
+
         function stopPlayback() {
             isPlaying = false;
             playButton.textContent = '▶ Play';

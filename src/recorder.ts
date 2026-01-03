@@ -3,7 +3,7 @@
  */
 
 import screenshot from 'screenshot-desktop';
-import { Frame } from './gifConverter';
+import type { Frame } from './gifConverter';
 
 let isRecording = false;
 let isPaused = false;
@@ -35,20 +35,20 @@ export function startRecording(): void {
     if (isPaused) {
       return;
     }
-    
+
     try {
       // Capture screenshot as PNG buffer
       const imageBuffer = await screenshot({ format: 'png' });
-      
+
       // Store frame with timestamp
       // Width and height are set to 0 and will be determined during GIF conversion
       const frame: Frame = {
         data: imageBuffer,
         timestamp: Date.now(),
         width: 0,
-        height: 0
+        height: 0,
       };
-      
+
       frames.push(frame);
       console.log(`Captured frame ${frames.length}`);
     } catch (error) {
@@ -60,7 +60,7 @@ export function startRecording(): void {
 /**
  * Stops the ongoing recording and returns captured frames.
  * Clears the recording interval and resets the recording state.
- * 
+ *
  * @returns Array of captured frames
  */
 export function stopRecording(): Frame[] {
@@ -80,11 +80,11 @@ export function stopRecording(): Frame[] {
   }
 
   console.log(`Recording stopped. Captured ${frames.length} frames.`);
-  
+
   // Return frames and reset for next recording
   const capturedFrames = [...frames];
   frames = [];
-  
+
   return capturedFrames;
 }
 
