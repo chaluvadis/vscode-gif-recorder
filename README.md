@@ -2,9 +2,9 @@
 
 <div align="center">
   <img src="media/logo.svg" alt="VS Code GIF Recorder Logo" width="128" height="128">
-  
+
   <p><strong>A Visual Studio Code extension for recording your coding sessions and exporting them as GIF animations.</strong></p>
-  
+
   ![License](https://img.shields.io/github/license/chaluvadis/vscode-gif-recorder)
   ![Version](https://img.shields.io/github/package-json/v/chaluvadis/vscode-gif-recorder)
   ![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-007ACC?logo=visual-studio-code)
@@ -44,8 +44,7 @@ vscode-gif-recorder/
 ├── out/                      # Compiled output
 ├── package.json              # Extension's metadata
 ├── tsconfig.json             # TypeScript configuration
-├── .eslintrc.json            # Linting configuration
-├── .prettierrc               # Formatting rules
+├── biome.json                # Biome linting and formatting configuration
 ├── .gitignore                # Gitignore file
 └── README.md                 # Documentation for the extension
 ```
@@ -91,8 +90,8 @@ vscode-gif-recorder/
 
 - `npm run compile` - Compile TypeScript to JavaScript
 - `npm run watch` - Watch for changes and recompile automatically
-- `npm run lint` - Run ESLint to check code quality
-- `npm run format` - Format code with Prettier
+- `npm run lint` - Run Biome lint checks
+- `npm run format` - Format code with Biome
 
 ## Current Status
 
@@ -121,12 +120,12 @@ This extension is now **fully functional** with the following features implement
 
 ## 🚀 Usage
 
-1. **Start Recording**: 
+1. **Start Recording**:
    - Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
    - Run `GIF Recorder: Start Recording`
    - Your screen will start being captured at 10 frames per second
 
-2. **Perform Actions**: 
+2. **Perform Actions**:
    - Work in VS Code as normal - all your actions are being recorded
    - The extension captures your entire screen
 
@@ -136,7 +135,7 @@ This extension is now **fully functional** with the following features implement
    - Run `GIF Recorder: Resume Recording` to continue capturing
    - Use this feature to exclude unwanted portions from your recording
 
-4. **Stop Recording**: 
+4. **Stop Recording**:
    - Open the Command Palette again
    - Run `GIF Recorder: Stop Recording`
    - A preview panel will open showing your recording
@@ -146,7 +145,7 @@ This extension is now **fully functional** with the following features implement
    - Click the Play button to see the animation
    - Review the recording before deciding to save or discard
 
-5. **Save Your GIF**: 
+5. **Save Your GIF**:
    - Click "Save as GIF" in the preview panel
    - A save dialog will appear
    - Choose a location and filename for your GIF
