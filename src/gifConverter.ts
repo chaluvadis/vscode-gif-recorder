@@ -2,8 +2,8 @@
  * GIF Converter module for converting captured frames to GIF format.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import GIFEncoder from 'gif-encoder-2';
 import { PNG } from 'pngjs';
 
@@ -63,7 +63,7 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
 
   // Create GIF encoder
   const encoder = new GIFEncoder(width, height);
-  
+
   // Create write stream
   const writeStream = fs.createWriteStream(options.outputPath);
 
@@ -79,10 +79,12 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
   for (let i = 0; i < frames.length; i++) {
     try {
       const png = PNG.sync.read(frames[i].data);
-      
+
       // Ensure frame has the same dimensions
       if (png.width !== width || png.height !== height) {
-        console.warn(`Frame ${i} has different dimensions (${png.width}x${png.height} vs ${width}x${height}), skipping...`);
+        console.warn(
+          `Frame ${i} has different dimensions (${png.width}x${png.height} vs ${width}x${height}), skipping...`
+        );
         continue;
       }
 

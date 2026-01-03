@@ -1,9 +1,15 @@
+import * as os from 'node:os';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { startRecording, stopRecording, pauseRecording, resumeRecording, DEFAULT_FPS } from './recorder';
+import {
+  startRecording,
+  stopRecording,
+  pauseRecording,
+  resumeRecording,
+  DEFAULT_FPS,
+} from './recorder';
 import { convertToGif } from './gifConverter';
 import { showPreview } from './previewPanel';
-import * as path from 'node:path';
-import * as os from 'node:os';
 
 /**
  * This method is called when the extension is activated.
@@ -17,7 +23,9 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.startRecording',
     () => {
       startRecording();
-      vscode.window.showInformationMessage(`GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`);
+      vscode.window.showInformationMessage(
+        `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
+      );
     }
   );
 
@@ -28,7 +36,9 @@ export function activate(context: vscode.ExtensionContext) {
       const frames = stopRecording();
 
       if (frames.length === 0) {
-        vscode.window.showWarningMessage('No frames were captured. Recording may not have been started.');
+        vscode.window.showWarningMessage(
+          'No frames were captured. Recording may not have been started.'
+        );
         return;
       }
 
@@ -49,9 +59,9 @@ export function activate(context: vscode.ExtensionContext) {
       const saveUri = await vscode.window.showSaveDialog({
         defaultUri: vscode.Uri.file(defaultPath),
         filters: {
-          'GIF files': ['gif']
+          'GIF files': ['gif'],
         },
-        saveLabel: 'Save GIF'
+        saveLabel: 'Save GIF',
       });
 
       if (!saveUri) {
@@ -64,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
         {
           location: vscode.ProgressLocation.Notification,
           title: 'Converting to GIF',
-          cancellable: false
+          cancellable: false,
         },
         async (progress) => {
           progress.report({ increment: 0, message: 'Processing frames...' });
@@ -73,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
             const outputPath = await convertToGif(frames, {
               outputPath: saveUri.fsPath,
               fps: 10,
-              quality: 10
+              quality: 10,
             });
 
             progress.report({ increment: 100, message: 'Complete!' });
