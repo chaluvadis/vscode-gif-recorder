@@ -1,6 +1,5 @@
 .vscode/**
 .vscode-test/**
-node_modules/**
 src/**
 .gitignore
 .yarnrc
@@ -17,6 +16,5 @@ tools/**
 .github/**
 .vscode-test-web/**
 .vscode-test/**
-node_modules/**
 readme.md
 package-lock.json
