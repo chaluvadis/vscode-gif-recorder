@@ -3,8 +3,6 @@
   "files": {
     "includes": [
       "src/**",
-      "!out/**",
-      "!dist/**",
       "!**/*.d.ts"
     ]
   },
