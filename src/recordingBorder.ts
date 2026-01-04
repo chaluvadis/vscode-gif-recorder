@@ -1,6 +1,6 @@
 /**
- * Recording Border module for visually indicating recording status.
- * Displays a highlighted border around the editor during recording.
+ * Recording indicator module for visually indicating recording status.
+ * Shows a prominent recording status bar item during recording.
  */
 
 import * as vscode from 'vscode';
@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 let statusBarItem: vscode.StatusBarItem | undefined;
 
 /**
- * Shows a visual border/indicator that recording is in progress.
+ * Shows a visual indicator that recording is in progress.
  * This uses a status bar item to provide a clear visual cue.
  */
 export function showRecordingBorder(): void {
@@ -35,7 +35,7 @@ export function showRecordingBorder(): void {
 }
 
 /**
- * Hides the recording border/indicator.
+ * Hides the recording status bar indicator.
  */
 export function hideRecordingBorder(): void {
   if (statusBarItem) {

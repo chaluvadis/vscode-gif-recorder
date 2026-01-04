@@ -57,7 +57,11 @@ export function startRecording(): void {
       
       // Notify callback of new frame
       if (onFrameCapturedCallback) {
-        onFrameCapturedCallback(frames.length);
+        try {
+          onFrameCapturedCallback(frames.length);
+        } catch (callbackError) {
+          console.error('Error in onFrameCapturedCallback:', callbackError);
+        }
       }
     } catch (error) {
       console.error('Error capturing frame:', error);
