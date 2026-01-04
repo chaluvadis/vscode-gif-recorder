@@ -4,6 +4,7 @@
   "description": "Record your VS Code actions and export them as GIFs",
   "version": "0.0.1",
   "icon": "media/icon.png",
+  "publisher": "nomad-in-code",
   "engines": {
     "vscode": "^1.80.0"
   },
