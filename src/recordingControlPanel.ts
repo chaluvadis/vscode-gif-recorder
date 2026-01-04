@@ -11,7 +11,7 @@ let onRecordingStopCallback: (() => void) | undefined;
 
 /**
  * Shows the recording control panel with Record/Stop buttons.
- * 
+ *
  * @param onStart - Callback when user clicks Record button
  * @param onStop - Callback when user clicks Stop button
  * @param isRecording - Current recording state to display
@@ -37,7 +37,7 @@ export function showRecordingControlPanel(
     vscode.ViewColumn.One,
     {
       enableScripts: true,
-      retainContextWhenHidden: true
+      retainContextWhenHidden: true,
     }
   );
 
@@ -50,27 +50,27 @@ export function showRecordingControlPanel(
     onRecordingStopCallback = undefined;
   });
 
-  controlPanel.webview.onDidReceiveMessage(
-    message => {
-      try {
-        switch (message.command) {
-          case 'startRecording':
-            if (onRecordingStartCallback) {
-              onRecordingStartCallback();
-            }
-            break;
-          case 'stopRecording':
-            if (onRecordingStopCallback) {
-              onRecordingStopCallback();
-            }
-            break;
-        }
-      } catch (error) {
-        console.error('Error while handling recording control panel message:', error);
-        vscode.window.showErrorMessage('An error occurred while handling a recording command. Please check the extension logs for details.');
+  controlPanel.webview.onDidReceiveMessage((message) => {
+    try {
+      switch (message.command) {
+        case 'startRecording':
+          if (onRecordingStartCallback) {
+            onRecordingStartCallback();
+          }
+          break;
+        case 'stopRecording':
+          if (onRecordingStopCallback) {
+            onRecordingStopCallback();
+          }
+          break;
       }
+    } catch (error) {
+      console.error('Error while handling recording control panel message:', error);
+      vscode.window.showErrorMessage(
+        'An error occurred while handling a recording command. Please check the extension logs for details.'
+      );
     }
-  );
+  });
 }
 
 /**
@@ -79,9 +79,9 @@ export function showRecordingControlPanel(
 export function setRecordingState(isRecording: boolean): void {
   if (controlPanel) {
     // Use postMessage to update UI state instead of replacing HTML
-    controlPanel.webview.postMessage({ 
-      command: 'updateRecordingState', 
-      isRecording 
+    controlPanel.webview.postMessage({
+      command: 'updateRecordingState',
+      isRecording,
     });
   }
 }
@@ -99,7 +99,7 @@ export function closeRecordingControlPanel(): void {
 /**
  * Generates the HTML content for the control panel.
  */
-function getControlPanelContent(isRecording: boolean): string {
+const getControlPanelContent = (isRecording: boolean): string => {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -245,7 +245,7 @@ function getControlPanelContent(isRecording: boolean): string {
 
     <script>
         const vscode = acquireVsCodeApi();
-        
+
         function attachEventListeners() {
             const recordButton = document.getElementById('recordButton');
             const stopButton = document.getElementById('stopButton');
@@ -278,13 +278,13 @@ function getControlPanelContent(isRecording: boolean): string {
             if (!container) return;
 
             container.innerHTML = getUIContentHTML(isRecording);
-            
+
             // Reattach event listeners after updating DOM
             attachEventListeners();
         }
 
         function getUIContentHTML(isRecording) {
-            const recordingIndicator = isRecording 
+            const recordingIndicator = isRecording
                 ? \`
                   <div class="recording-indicator">
                     <div class="recording-dot"></div>
@@ -323,13 +323,13 @@ function getControlPanelContent(isRecording: boolean): string {
     </script>
 </body>
 </html>`;
-}
+};
 
 /**
  * Helper function to generate UI content based on recording state.
  */
-function getUIContent(isRecording: boolean): string {
-  const recordingIndicator = isRecording 
+const getUIContent = (isRecording: boolean): string => {
+  const recordingIndicator = isRecording
     ? `
       <div class="recording-indicator">
         <div class="recording-dot"></div>
@@ -346,7 +346,8 @@ function getUIContent(isRecording: boolean): string {
     ? `<button id="stopButton" class="stop-button">⏹ Stop Recording</button>`
     : `<button id="recordButton" class="record-button">⏺ Start Recording</button>`;
 
-  const instructions = !isRecording ? `
+  const instructions = !isRecording
+    ? `
     <div class="instructions">
         <h3>How to Record:</h3>
         <ul>
@@ -356,7 +357,8 @@ function getUIContent(isRecording: boolean): string {
             <li>Click "Stop Recording" when done</li>
         </ul>
     </div>
-  ` : '';
+  `
+    : '';
 
   return `
     <h1>🎬 GIF Recorder</h1>
@@ -364,4 +366,4 @@ function getUIContent(isRecording: boolean): string {
     ${mainButton}
     ${instructions}
   `;
-}
+};
