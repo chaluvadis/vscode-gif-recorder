@@ -6,7 +6,6 @@ import {
   stopRecording,
   pauseRecording,
   resumeRecording,
-  DEFAULT_FPS,
   setOnFrameCaptured,
   clearOnFrameCaptured,
   getRecordingStatus,
@@ -61,14 +60,12 @@ function handleStartRecording(): void {
   });
 
   startRecording();
-
   // Show visual indicators
   showRecordingBorder();
   setRecordingState(true);
-
-  vscode.window.showInformationMessage(
-    `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
-  );
+  // vscode.window.showInformationMessage(
+  //   `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
+  // );
 }
 
 /**
