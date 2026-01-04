@@ -6,7 +6,6 @@
 import * as vscode from 'vscode';
 
 let statusBarItem: vscode.StatusBarItem | undefined;
-let decorationType: vscode.TextEditorDecorationType | undefined;
 
 /**
  * Shows a visual border/indicator that recording is in progress.
@@ -28,15 +27,6 @@ export function showRecordingBorder(): void {
   statusBarItem.command = 'vscode-gif-recorder.stopRecording';
   statusBarItem.show();
 
-  // Create a visual effect in the editor as well
-  if (!decorationType) {
-    decorationType = vscode.window.createTextEditorDecorationType({
-      isWholeLine: true,
-      backgroundColor: 'rgba(255, 0, 0, 0.05)',
-      border: '1px solid rgba(255, 0, 0, 0.3)',
-    });
-  }
-
   // Show notification with recording border theme
   vscode.window.showInformationMessage(
     '🔴 Recording Started - Your screen is being captured',
@@ -49,14 +39,8 @@ export function showRecordingBorder(): void {
  */
 export function hideRecordingBorder(): void {
   if (statusBarItem) {
-    statusBarItem.hide();
     statusBarItem.dispose();
     statusBarItem = undefined;
-  }
-
-  if (decorationType) {
-    decorationType.dispose();
-    decorationType = undefined;
   }
 }
 

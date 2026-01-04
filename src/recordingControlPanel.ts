@@ -41,6 +41,9 @@ export function showRecordingControlPanel(
 
   controlPanel.onDidDispose(() => {
     controlPanel = undefined;
+    // Clear callbacks when panel is disposed
+    onRecordingStartCallback = undefined;
+    onRecordingStopCallback = undefined;
   });
 
   controlPanel.webview.onDidReceiveMessage(
