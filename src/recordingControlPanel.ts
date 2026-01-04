@@ -100,23 +100,6 @@ export function closeRecordingControlPanel(): void {
  * Generates the HTML content for the control panel.
  */
 function getControlPanelContent(isRecording: boolean): string {
-  const recordingIndicator = isRecording 
-    ? `
-      <div class="recording-indicator">
-        <div class="recording-dot"></div>
-        <span>Recording in Progress...</span>
-      </div>
-      <div class="recording-border-hint">
-        <p>🎬 Your screen is being recorded</p>
-        <p class="hint-text">A status bar indicator shows recording status</p>
-      </div>
-    `
-    : '';
-
-  const mainButton = isRecording
-    ? `<button id="stopButton" class="stop-button">⏹ Stop Recording</button>`
-    : `<button id="recordButton" class="record-button">⏺ Start Recording</button>`;
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -257,42 +240,30 @@ function getControlPanelContent(isRecording: boolean): string {
 </head>
 <body>
     <div class="container">
-        <h1>🎬 GIF Recorder</h1>
-        
-        ${recordingIndicator}
-        
-        ${mainButton}
-
-        ${!isRecording ? `
-        <div class="instructions">
-            <h3>How to Record:</h3>
-            <ul>
-                <li>Click "Start Recording" to begin</li>
-                <li>A status bar indicator will show recording status</li>
-                <li>This control panel will not appear in the recording</li>
-                <li>Click "Stop Recording" when done</li>
-            </ul>
-        </div>
-        ` : ''}
+        ${getUIContent(isRecording)}
     </div>
 
     <script>
         const vscode = acquireVsCodeApi();
         
-        const recordButton = document.getElementById('recordButton');
-        const stopButton = document.getElementById('stopButton');
+        function attachEventListeners() {
+            const recordButton = document.getElementById('recordButton');
+            const stopButton = document.getElementById('stopButton');
 
-        if (recordButton) {
-            recordButton.addEventListener('click', () => {
-                vscode.postMessage({ command: 'startRecording' });
-            });
+            if (recordButton) {
+                recordButton.addEventListener('click', () => {
+                    vscode.postMessage({ command: 'startRecording' });
+                });
+            }
+
+            if (stopButton) {
+                stopButton.addEventListener('click', () => {
+                    vscode.postMessage({ command: 'stopRecording' });
+                });
+            }
         }
 
-        if (stopButton) {
-            stopButton.addEventListener('click', () => {
-                vscode.postMessage({ command: 'stopRecording' });
-            });
-        }
+        attachEventListeners();
 
         // Listen for state updates from extension
         window.addEventListener('message', event => {
@@ -306,6 +277,13 @@ function getControlPanelContent(isRecording: boolean): string {
             const container = document.querySelector('.container');
             if (!container) return;
 
+            container.innerHTML = getUIContentHTML(isRecording);
+            
+            // Reattach event listeners after updating DOM
+            attachEventListeners();
+        }
+
+        function getUIContentHTML(isRecording) {
             const recordingIndicator = isRecording 
                 ? \`
                   <div class="recording-indicator">
@@ -335,30 +313,55 @@ function getControlPanelContent(isRecording: boolean): string {
                 </div>
             \` : '';
 
-            container.innerHTML = \`
+            return \`
                 <h1>🎬 GIF Recorder</h1>
                 \${recordingIndicator}
                 \${mainButton}
                 \${instructions}
             \`;
-
-            // Reattach event listeners
-            const newRecordButton = document.getElementById('recordButton');
-            const newStopButton = document.getElementById('stopButton');
-
-            if (newRecordButton) {
-                newRecordButton.addEventListener('click', () => {
-                    vscode.postMessage({ command: 'startRecording' });
-                });
-            }
-
-            if (newStopButton) {
-                newStopButton.addEventListener('click', () => {
-                    vscode.postMessage({ command: 'stopRecording' });
-                });
-            }
         }
     </script>
 </body>
 </html>`;
+}
+
+/**
+ * Helper function to generate UI content based on recording state.
+ */
+function getUIContent(isRecording: boolean): string {
+  const recordingIndicator = isRecording 
+    ? `
+      <div class="recording-indicator">
+        <div class="recording-dot"></div>
+        <span>Recording in Progress...</span>
+      </div>
+      <div class="recording-border-hint">
+        <p>🎬 Your screen is being recorded</p>
+        <p class="hint-text">A status bar indicator shows recording status</p>
+      </div>
+    `
+    : '';
+
+  const mainButton = isRecording
+    ? `<button id="stopButton" class="stop-button">⏹ Stop Recording</button>`
+    : `<button id="recordButton" class="record-button">⏺ Start Recording</button>`;
+
+  const instructions = !isRecording ? `
+    <div class="instructions">
+        <h3>How to Record:</h3>
+        <ul>
+            <li>Click "Start Recording" to begin</li>
+            <li>A status bar indicator will show recording status</li>
+            <li>This control panel will not appear in the recording</li>
+            <li>Click "Stop Recording" when done</li>
+        </ul>
+    </div>
+  ` : '';
+
+  return `
+    <h1>🎬 GIF Recorder</h1>
+    ${recordingIndicator}
+    ${mainButton}
+    ${instructions}
+  `;
 }
