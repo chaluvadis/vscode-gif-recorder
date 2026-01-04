@@ -7,9 +7,21 @@ import {
   pauseRecording,
   resumeRecording,
   DEFAULT_FPS,
+  setOnFrameCaptured,
+  clearOnFrameCaptured,
 } from './recorder';
 import { convertToGif } from './gifConverter';
 import { showPreview } from './previewPanel';
+import {
+  showRecordingControlPanel,
+  setRecordingState,
+  closeRecordingControlPanel,
+} from './recordingControlPanel';
+import {
+  showRecordingBorder,
+  hideRecordingBorder,
+  updateRecordingIndicator,
+} from './recordingBorder';
 
 /**
  * This method is called when the extension is activated.
@@ -18,11 +30,38 @@ import { showPreview } from './previewPanel';
 export function activate(context: vscode.ExtensionContext) {
   console.log('vscode-gif-recorder is now active!');
 
+  // Register command to show recording controls
+  const showControlsCommand = vscode.commands.registerCommand(
+    'vscode-gif-recorder.showControls',
+    () => {
+      showRecordingControlPanel(
+        () => {
+          // Start recording callback
+          vscode.commands.executeCommand('vscode-gif-recorder.startRecording');
+        },
+        () => {
+          // Stop recording callback
+          vscode.commands.executeCommand('vscode-gif-recorder.stopRecording');
+        }
+      );
+    }
+  );
+
   // Register the start recording command
   const startRecordingCommand = vscode.commands.registerCommand(
     'vscode-gif-recorder.startRecording',
     () => {
+      // Set up frame capture callback for visual updates
+      setOnFrameCaptured((frameCount) => {
+        updateRecordingIndicator(frameCount);
+      });
+
       startRecording();
+      
+      // Show visual indicators
+      showRecordingBorder();
+      setRecordingState(true);
+      
       vscode.window.showInformationMessage(
         `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
       );
@@ -34,6 +73,11 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.stopRecording',
     async () => {
       const frames = stopRecording();
+
+      // Clear frame capture callback and hide visual indicators
+      clearOnFrameCaptured();
+      hideRecordingBorder();
+      setRecordingState(false);
 
       if (frames.length === 0) {
         vscode.window.showWarningMessage(
@@ -126,6 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  context.subscriptions.push(showControlsCommand);
   context.subscriptions.push(startRecordingCommand);
   context.subscriptions.push(stopRecordingCommand);
   context.subscriptions.push(pauseRecordingCommand);
@@ -136,5 +181,10 @@ export function activate(context: vscode.ExtensionContext) {
  * This method is called when the extension is deactivated.
  */
 export function deactivate() {
+  // Clean up resources
+  hideRecordingBorder();
+  closeRecordingControlPanel();
+  clearOnFrameCaptured();
+  
   console.log('vscode-gif-recorder is now deactivated.');
 }
