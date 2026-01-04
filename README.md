@@ -10,7 +10,10 @@ The extension uses `screenshot-desktop` to capture the primary display at a fixe
 
 ## Features
 
-- Start, stop, pause, and resume recording directly from the command palette.
+- **Recording Control Panel**: A dedicated UI panel with Record and Stop buttons for easy access
+- **Visual Recording Indicator**: A prominent red status bar indicator shows when recording is active
+- **Frame Counter**: Live frame count updates during recording
+- Start, stop, pause, and resume recording directly from the command palette or control panel
 - Capture the active desktop at 10 FPS (configurable in code via DEFAULT_FPS).
 - Live preview panel with frame slider, play/pause controls, and discard/save options.
 - GIF export with progress reporting, automatic default filename, and open-on-complete prompt.
@@ -18,11 +21,14 @@ The extension uses `screenshot-desktop` to capture the primary display at a fixe
 
 ## Recording Flow
 
-1. `GIF Recorder: Start Recording` sets up an interval that captures PNG screenshots on the primary display and streams them into memory.
-2. `GIF Recorder: Pause Recording` toggles a flag so frames are temporarily skipped without clearing the buffered data.
-3. `GIF Recorder: Stop Recording` opens an interactive preview webview. Closing the panel without saving discards the capture.
-4. Selecting **Save as GIF** prompts for a destination, encodes the buffered frames with a 10 FPS delay and quality 10, and writes the file to disk.
-5. A notification with progress feedback is shown during encoding, and you can open the resulting file immediately after completion.
+1. Run `GIF Recorder: Show Recording Controls` to open the control panel with Record and Stop buttons.
+2. Click **Start Recording** button (or use `GIF Recorder: Start Recording` command) to begin capturing. A red status bar indicator appears.
+3. The control panel updates to show recording status with a Stop button and frame counter in the status bar.
+4. `GIF Recorder: Pause Recording` toggles a flag so frames are temporarily skipped without clearing the buffered data.
+5. Click **Stop Recording** button (or use `GIF Recorder: Stop Recording` command) to finish. The status bar indicator disappears and an interactive preview webview opens.
+6. In the preview, review your recording using the frame slider and playback controls.
+7. Selecting **Save as GIF** prompts for a destination, encodes the buffered frames with a 10 FPS delay and quality 10, and writes the file to disk.
+8. A notification with progress feedback is shown during encoding, and you can open the resulting file immediately after completion.
 
 ## Preview Controls
 
@@ -43,11 +49,24 @@ Launch the extension in a VS Code Extension Development Host by pressing `F5`.
 
 ## Usage in VS Code
 
+### Method 1: Using the Control Panel (Recommended)
+1. Run `GIF Recorder: Show Recording Controls` from the command palette to open the control panel.
+2. Click the **Start Recording** button in the panel.
+3. A red status bar indicator (🔴 Recording) appears, showing the recording is active.
+4. Perform the actions you want to capture. The control panel will not appear in the recording.
+5. Click the **Stop Recording** button when done.
+6. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
+7. Select your desired save location in the file dialog.
+8. After saving, choose **Open File** in the notification to view the generated GIF.
+
+### Method 2: Using Command Palette
 1. Run `GIF Recorder: Start Recording` from the command palette.
-2. Perform the actions you want to capture.
-3. Optionally run `GIF Recorder: Pause Recording` and `GIF Recorder: Resume Recording` to skip unwanted segments.
-4. Run `GIF Recorder: Stop Recording`. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
-5. After saving, choose **Open File** in the notification to view the generated GIF.
+2. A red status bar indicator shows recording is active with frame count updates.
+3. Perform the actions you want to capture.
+4. Optionally run `GIF Recorder: Pause Recording` and `GIF Recorder: Resume Recording` to skip unwanted segments.
+5. Run `GIF Recorder: Stop Recording`. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
+6. Select your desired save location in the file dialog.
+7. After saving, choose **Open File** in the notification to view the generated GIF.
 
 ## Development Tasks
 
