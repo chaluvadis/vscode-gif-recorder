@@ -9,6 +9,7 @@ import {
   DEFAULT_FPS,
   setOnFrameCaptured,
   clearOnFrameCaptured,
+  getRecordingStatus,
 } from './recorder';
 import { convertToGif } from './gifConverter';
 import { showPreview } from './previewPanel';
@@ -139,7 +140,8 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       showRecordingControlPanel(
         handleStartRecording,
-        handleStopRecording
+        handleStopRecording,
+        getRecordingStatus()
       );
     }
   );
