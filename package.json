@@ -4,18 +4,12 @@
   "description": "Record your VS Code actions and export them as GIFs",
   "version": "0.0.1",
   "icon": "media/icon.png",
+  "publisher": "nomad-in-code",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
-  ],
-  "activationEvents": [
-    "onCommand:vscode-gif-recorder.showControls",
-    "onCommand:vscode-gif-recorder.startRecording",
-    "onCommand:vscode-gif-recorder.stopRecording",
-    "onCommand:vscode-gif-recorder.pauseRecording",
-    "onCommand:vscode-gif-recorder.resumeRecording"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -40,7 +34,17 @@
         "command": "vscode-gif-recorder.resumeRecording",
         "title": "GIF Recorder: Resume Recording"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "VS Code GIF Recorder",
+      "properties": {
+        "vscode-gif-recorder.outputDirectory": {
+          "type": "string",
+          "markdownDescription": "Default directory used when prompting to save a recording. Use an absolute path, `~` for the home directory, or a path relative to the first workspace folder.",
+          "default": "~/Downloads"
+        }
+      }
+    }
   },
   "repository": {
     "type": "git",

@@ -18,3 +18,6 @@ tools/**
 .vscode-test/**
 readme.md
 package-lock.json
+package.json
+tsconfig.json
+biome.json

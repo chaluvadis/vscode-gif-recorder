@@ -59,6 +59,10 @@ Launch the extension in a VS Code Extension Development Host by pressing `F5`.
 7. Select your desired save location in the file dialog.
 8. After saving, choose **Open File** in the notification to view the generated GIF.
 
+## Configuration
+
+- `vscode-gif-recorder.outputDirectory`: default folder suggested when saving a recording. Defaults to `~/Downloads`, but accepts any absolute path, `~`, or paths relative to the first workspace folder.
+
 ### Method 2: Using Command Palette
 1. Run `GIF Recorder: Start Recording` from the command palette.
 2. A red status bar indicator shows recording is active with frame count updates.
@@ -67,21 +71,6 @@ Launch the extension in a VS Code Extension Development Host by pressing `F5`.
 5. Run `GIF Recorder: Stop Recording`. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
 6. Select your desired save location in the file dialog.
 7. After saving, choose **Open File** in the notification to view the generated GIF.
-
-## Development Tasks
-
-```bash
-npm run compile   # TypeScript build
-npm run watch     # Incremental build
-npm run lint      # Biome lint checks
-npm run format    # Biome formatter (writes in place)
-```
-## Known Limitations
-
-- Screenshots capture the whole primary desktop; window-only or region capture is not available.
-- Frames are buffered entirely in memory which can consume significant RAM for long or high-resolution recordings.
-- Capture and encoding run on the extension host thread, so very large sessions may temporarily impact VS Code responsiveness.
-- Mouse cursor visibility depends on the underlying OS capabilities of `screenshot-desktop`.
 
 ## Future Enhancements
 
