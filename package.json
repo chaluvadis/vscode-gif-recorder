@@ -11,6 +11,7 @@
     "Other"
   ],
   "activationEvents": [
+    "onCommand:vscode-gif-recorder.showControls",
     "onCommand:vscode-gif-recorder.startRecording",
     "onCommand:vscode-gif-recorder.stopRecording",
     "onCommand:vscode-gif-recorder.pauseRecording",
@@ -19,6 +20,10 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "vscode-gif-recorder.showControls",
+        "title": "GIF Recorder: Show Recording Controls"
+      },
       {
         "command": "vscode-gif-recorder.startRecording",
         "title": "GIF Recorder: Start Recording"

@@ -11,6 +11,9 @@ let captureInterval: NodeJS.Timeout | null = null;
 let frames: Frame[] = [];
 export const DEFAULT_FPS = 10;
 
+// Callback for frame capture events
+let onFrameCapturedCallback: ((frameCount: number) => void) | undefined;
+
 /**
  * Starts recording the VS Code window.
  * Captures screen frames at the specified frame rate and stores them in memory.
@@ -51,6 +54,15 @@ export function startRecording(): void {
 
       frames.push(frame);
       console.log(`Captured frame ${frames.length}`);
+      
+      // Notify callback of new frame
+      if (onFrameCapturedCallback) {
+        try {
+          onFrameCapturedCallback(frames.length);
+        } catch (callbackError) {
+          console.error('Error in onFrameCapturedCallback:', callbackError);
+        }
+      }
     } catch (error) {
       console.error('Error capturing frame:', error);
     }
@@ -144,4 +156,18 @@ export function getPausedStatus(): boolean {
  */
 export function getFrameCount(): number {
   return frames.length;
+}
+
+/**
+ * Sets a callback to be invoked when a new frame is captured.
+ */
+export function setOnFrameCaptured(callback: (frameCount: number) => void): void {
+  onFrameCapturedCallback = callback;
+}
+
+/**
+ * Clears the frame capture callback.
+ */
+export function clearOnFrameCaptured(): void {
+  onFrameCapturedCallback = undefined;
 }
