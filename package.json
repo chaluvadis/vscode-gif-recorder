@@ -11,13 +11,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:vscode-gif-recorder.showControls",
-    "onCommand:vscode-gif-recorder.startRecording",
-    "onCommand:vscode-gif-recorder.stopRecording",
-    "onCommand:vscode-gif-recorder.pauseRecording",
-    "onCommand:vscode-gif-recorder.resumeRecording"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
