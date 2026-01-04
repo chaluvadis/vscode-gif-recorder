@@ -20,7 +20,9 @@ const frameCache: Map<number, string> = new Map();
 export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> {
   // Prevent concurrent preview calls
   if (currentPanel && previewCallback) {
-    vscode.window.showWarningMessage('A preview is already open. Please save or discard the current recording first.');
+    vscode.window.showWarningMessage(
+      'A preview is already open. Please save or discard the current recording first.'
+    );
     throw new Error('Preview already active');
   }
 
@@ -40,7 +42,7 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
         vscode.ViewColumn.One,
         {
           enableScripts: true,
-          retainContextWhenHidden: true
+          retainContextWhenHidden: true,
         }
       );
 
@@ -55,29 +57,27 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
       });
 
       // Handle messages from the webview
-      currentPanel.webview.onDidReceiveMessage(
-        message => {
-          switch (message.command) {
-            case 'save':
-              if (previewCallback) {
-                previewCallback('save');
-                previewCallback = undefined;
-              }
-              currentPanel?.dispose();
-              break;
-            case 'discard':
-              if (previewCallback) {
-                previewCallback('discard');
-                previewCallback = undefined;
-              }
-              currentPanel?.dispose();
-              break;
-            case 'getFrame':
-              sendFrameToWebview(message.index);
-              break;
-          }
+      currentPanel.webview.onDidReceiveMessage((message) => {
+        switch (message.command) {
+          case 'save':
+            if (previewCallback) {
+              previewCallback('save');
+              previewCallback = undefined;
+            }
+            currentPanel?.dispose();
+            break;
+          case 'discard':
+            if (previewCallback) {
+              previewCallback('discard');
+              previewCallback = undefined;
+            }
+            currentPanel?.dispose();
+            break;
+          case 'getFrame':
+            sendFrameToWebview(message.index);
+            break;
         }
-      );
+      });
     }
 
     // Set the webview content
@@ -92,7 +92,7 @@ export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> 
  * Sends a specific frame to the webview for display.
  * Uses caching to avoid repeated base64 encoding of the same frame.
  */
-function sendFrameToWebview(index: number): void {
+const sendFrameToWebview = (index: number): void => {
   if (!currentPanel || index < 0 || index >= currentFrames.length) {
     return;
   }
@@ -111,14 +111,14 @@ function sendFrameToWebview(index: number): void {
     command: 'displayFrame',
     index: index,
     data: `data:image/png;base64,${base64Image}`,
-    totalFrames: currentFrames.length
+    totalFrames: currentFrames.length,
   });
-}
+};
 
 /**
  * Generates the HTML content for the webview.
  */
-function getWebviewContent(frameCount: number): string {
+const getWebviewContent = (frameCount: number): string => {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -395,4 +395,4 @@ function getWebviewContent(frameCount: number): string {
     </script>
 </body>
 </html>`;
-}
+};

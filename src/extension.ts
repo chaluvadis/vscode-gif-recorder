@@ -24,6 +24,33 @@ import {
   updateRecordingIndicator,
 } from './recordingBorder';
 
+function getDefaultOutputDirectory(): string {
+  const configuration = vscode.workspace.getConfiguration('vscode-gif-recorder');
+  const configuredPath = configuration.get<string>('outputDirectory') ?? '~/Downloads';
+
+  if (configuredPath) {
+    const trimmed = configuredPath.trim();
+    if (trimmed.length > 0) {
+      let resolved = trimmed;
+
+      if (trimmed.startsWith('~')) {
+        resolved = path.join(os.homedir(), trimmed.slice(1));
+      } else if (!path.isAbsolute(trimmed)) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+          resolved = path.join(workspaceFolders[0].uri.fsPath, trimmed);
+        } else {
+          resolved = path.join(os.homedir(), trimmed);
+        }
+      }
+
+      return path.normalize(resolved);
+    }
+  }
+
+  return path.join(os.homedir(), 'Downloads');
+}
+
 /**
  * Helper function to set up and start recording with visual indicators.
  */
@@ -34,11 +61,11 @@ function handleStartRecording(): void {
   });
 
   startRecording();
-  
+
   // Show visual indicators
   showRecordingBorder();
   setRecordingState(true);
-  
+
   vscode.window.showInformationMessage(
     `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
   );
@@ -74,7 +101,8 @@ async function handleStopRecording(): Promise<void> {
 
   // Show save dialog for output file
   const defaultFileName = `recording-${Date.now()}.gif`;
-  const defaultPath = path.join(os.homedir(), 'Downloads', defaultFileName);
+  const defaultDirectory = getDefaultOutputDirectory();
+  const defaultPath = path.join(defaultDirectory, defaultFileName);
 
   const saveUri = await vscode.window.showSaveDialog({
     defaultUri: vscode.Uri.file(defaultPath),
@@ -138,11 +166,7 @@ export function activate(context: vscode.ExtensionContext) {
   const showControlsCommand = vscode.commands.registerCommand(
     'vscode-gif-recorder.showControls',
     () => {
-      showRecordingControlPanel(
-        handleStartRecording,
-        handleStopRecording,
-        getRecordingStatus()
-      );
+      showRecordingControlPanel(handleStartRecording, handleStopRecording, getRecordingStatus());
     }
   );
 
@@ -189,11 +213,11 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
   // Stop any active recording to prevent memory leaks
   stopRecording();
-  
+
   // Clean up resources
   hideRecordingBorder();
   closeRecordingControlPanel();
   clearOnFrameCaptured();
-  
+
   console.log('vscode-gif-recorder is now deactivated.');
 }
