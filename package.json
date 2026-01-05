@@ -42,6 +42,38 @@
           "type": "string",
           "markdownDescription": "Default directory used when prompting to save a recording. Use an absolute path, `~` for the home directory, or a path relative to the first workspace folder.",
           "default": "~/Downloads"
+        },
+        "vscode-gif-recorder.algorithm": {
+          "type": "string",
+          "enum": [
+            "octree",
+            "neuquant"
+          ],
+          "enumDescriptions": [
+            "Octree - Generally produces smaller files, better for screen recordings with solid colors",
+            "NeuQuant - Neural network based, better for photographic content"
+          ],
+          "default": "octree",
+          "description": "Algorithm used for GIF color quantization"
+        },
+        "vscode-gif-recorder.useOptimizer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable optimizer to reduce file size by reusing color tables for similar frames"
+        },
+        "vscode-gif-recorder.optimizerThreshold": {
+          "type": "number",
+          "default": 90,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Optimizer threshold percentage (0-100). Higher values enable more aggressive optimization."
+        },
+        "vscode-gif-recorder.quality": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "GIF encoding quality (1-20). Lower values produce smaller files but may reduce visual quality."
         }
       }
     }
@@ -61,17 +93,18 @@
     "package": "npm run compile && vsce package"
   },
   "devDependencies": {
-    "@types/vscode": "^1.107.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "25.0.3",
-    "typescript-eslint": "^8.51.0",
-    "eslint": "^9.39.2",
-    "esbuild": "^0.27.2",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
+    "@types/pngjs": "^6.0.5",
+    "@types/vscode": "^1.107.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.1"
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.51.0"
   },
   "dependencies": {
     "gif-encoder-2": "^1.0.5",
