@@ -24,6 +24,9 @@ export interface GifOptions {
   outputPath: string;
   fps?: number;
   quality?: number;
+  algorithm?: 'neuquant' | 'octree';
+  useOptimizer?: boolean;
+  threshold?: number;
 }
 
 /**
@@ -41,12 +44,20 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
 
   const fps = options.fps || 10;
   const quality = options.quality || 10; // Lower is better (1-20)
+  const algorithm = options.algorithm || 'octree'; // octree generally produces smaller files
+  const useOptimizer = options.useOptimizer ?? true; // Enable optimizer by default
+  const threshold = options.threshold || 90; // Optimizer threshold (0-100, higher = more optimization)
   const delay = Math.floor(1000 / fps); // Delay between frames in ms
 
   console.log(`Converting ${frames.length} frames to GIF...`);
   console.log(`Output path: ${options.outputPath}`);
   console.log(`FPS: ${fps}`);
   console.log(`Quality: ${quality}`);
+  console.log(`Algorithm: ${algorithm}`);
+  console.log(`Optimizer: ${useOptimizer ? 'enabled' : 'disabled'}`);
+  if (useOptimizer) {
+    console.log(`Threshold: ${threshold}%`);
+  }
 
   // Ensure output directory exists
   const outputDir = path.dirname(options.outputPath);
@@ -61,8 +72,8 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
 
   console.log(`GIF dimensions: ${width}x${height}`);
 
-  // Create GIF encoder
-  const encoder = new GIFEncoder(width, height);
+  // Create GIF encoder with optimizer enabled for better compression
+  const encoder = new GIFEncoder(width, height, algorithm, useOptimizer, frames.length);
 
   // Create write stream
   const writeStream = fs.createWriteStream(options.outputPath);
@@ -73,6 +84,11 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
   encoder.setRepeat(0); // 0 for repeat, -1 for no-repeat
   encoder.setDelay(delay);
   encoder.setQuality(quality);
+  
+  // Set optimizer threshold if optimizer is enabled
+  if (useOptimizer) {
+    encoder.setThreshold(threshold);
+  }
 
   // Process and add each frame
   let framesAdded = 0;

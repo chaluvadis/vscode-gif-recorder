@@ -114,6 +114,13 @@ async function handleStopRecording(): Promise<void> {
     return;
   }
 
+  // Get configuration settings
+  const configuration = vscode.workspace.getConfiguration('vscode-gif-recorder');
+  const algorithm = configuration.get<'octree' | 'neuquant'>('algorithm') ?? 'octree';
+  const useOptimizer = configuration.get<boolean>('useOptimizer') ?? true;
+  const threshold = configuration.get<number>('optimizerThreshold') ?? 90;
+  const quality = configuration.get<number>('quality') ?? 10;
+
   // Show progress while converting
   await vscode.window.withProgress(
     {
@@ -128,7 +135,10 @@ async function handleStopRecording(): Promise<void> {
         const outputPath = await convertToGif(frames, {
           outputPath: saveUri.fsPath,
           fps: 10,
-          quality: 10,
+          quality: quality,
+          algorithm: algorithm,
+          useOptimizer: useOptimizer,
+          threshold: threshold,
         });
 
         progress.report({ increment: 100, message: 'Complete!' });
