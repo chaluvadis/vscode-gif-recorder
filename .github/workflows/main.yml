@@ -37,7 +37,7 @@ jobs:
         OUT="vscode-gif-recorder-${TAG}.vsix"
         echo "OUT=${OUT}" >> $GITHUB_ENV
         echo "Packaging VSIX -> ${OUT}"
-        pnpm package --out "${OUT}"
+        npm run package --out "${OUT}"
       shell: bash
 
     - name: Get VSIX name
