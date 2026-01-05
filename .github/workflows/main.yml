@@ -27,9 +27,6 @@ jobs:
     - name: Install Packages
       run: npm i
 
-    - name: Compile extension
-      run: npm compile
-
     - name: Package extension
       run: |
         # Use the tag name as part of the VSIX filename when available.
