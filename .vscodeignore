@@ -21,3 +21,4 @@ package-lock.json
 package.json
 tsconfig.json
 biome.json
+node_modules/@biomejs

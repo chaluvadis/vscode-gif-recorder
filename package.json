@@ -6,7 +6,7 @@
   "icon": "media/icon.png",
   "publisher": "nomad-in-code",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.107.0"
   },
   "categories": [
     "Other"
