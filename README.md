@@ -1,43 +1,45 @@
 # VS Code GIF Recorder
 
-Record VS Code workflows and export them as animated GIFs in seconds.
+Quickly record your VS Code workflows and save them as animated GIFs—perfect for demos, tutorials, and bug reports.
 
-## Overview
+## What is this?
 
-VS Code GIF Recorder captures your editor workflow and converts the captured frames into an animated GIF. It is designed for demos, bug reports, and quick walkthroughs where a lightweight visual artifact is more convenient than a full video.
+Ever wanted to show someone exactly how to do something in VS Code without recording a full video? This extension lets you capture your screen activity and turn it into a lightweight animated GIF that's easy to share anywhere.
 
-The extension uses `screenshot-desktop` to capture the primary display at a fixed frame rate, buffers the frames in memory, lets you inspect them in a dedicated preview panel, and finally encodes them into a GIF with `gif-encoder-2` and `pngjs`.
+Whether you're creating a quick demo, documenting a bug, or making a tutorial, GIF Recorder makes it simple to capture and export your workflow in just a few clicks.
 
-## Features
+## Key Features
 
-- **Recording Control Panel**: A dedicated UI panel with Record and Stop buttons for easy access
-- **Visual Recording Indicator**: A prominent red status bar indicator shows when recording is active
-- **Frame Counter**: Live frame count updates during recording
-- Start, stop, pause, and resume recording directly from the command palette or control panel
-- Capture the active desktop at 10 FPS (configurable in code via DEFAULT_FPS).
-- Live preview panel with frame slider, play/pause controls, and discard/save options.
-- GIF export with progress reporting, automatic default filename, and open-on-complete prompt.
-- Biome-powered linting and formatting for a consistent development workflow.
+- **Easy-to-use control panel** with big, obvious Start and Stop buttons
+- **Clear visual feedback** with a red recording indicator in your status bar
+- **Pause and resume** to skip parts you don't want to include
+- **Preview before saving** with playback controls so you know exactly what you're getting
+- **One-click export** to save your recording as a GIF file
 
-## Recording Flow
+## How to Use
 
-1. Run `GIF Recorder: Show Recording Controls` to open the control panel with Record and Stop buttons.
-2. Click **Start Recording** button (or use `GIF Recorder: Start Recording` command) to begin capturing. A red status bar indicator appears.
-3. The control panel updates to show recording status with a Stop button and frame counter in the status bar.
-4. `GIF Recorder: Pause Recording` toggles a flag so frames are temporarily skipped without clearing the buffered data.
-5. Click **Stop Recording** button (or use `GIF Recorder: Stop Recording` command) to finish. The status bar indicator disappears and an interactive preview webview opens.
-6. In the preview, review your recording using the frame slider and playback controls.
-7. Selecting **Save as GIF** prompts for a destination, encodes the buffered frames with a 10 FPS delay and quality 10, and writes the file to disk.
-8. A notification with progress feedback is shown during encoding, and you can open the resulting file immediately after completion.
+### Quick Start (Recommended)
 
-## Preview Controls
+1. Open the command palette (`Cmd+Shift+P` or `Ctrl+Shift+P`) and run **"GIF Recorder: Show Recording Controls"**
+2. Click the **Start Recording** button—you'll see a red 🔴 indicator in your status bar
+3. Do whatever you want to capture in VS Code
+4. Click **Stop Recording** when you're done
+5. Preview your recording, then click **Save as GIF**
+6. Choose where to save it, and you're done!
 
-- Frame slider requests specific frames from the extension via webview messaging.
-- Play button loops through frames at the capture FPS and can be paused at any time.
-- Save button confirms the preview and moves on to the GIF export step.
-- Discard button closes the preview and drops the buffered frames.
+### Using Commands
 
-## Installation
+If you prefer using the command palette directly:
+
+- **Start Recording**: Opens `GIF Recorder: Start Recording`
+- **Pause/Resume**: Use `GIF Recorder: Pause Recording` and `GIF Recorder: Resume Recording` to skip unwanted parts
+- **Stop Recording**: Run `GIF Recorder: Stop Recording` when finished
+
+After stopping, you'll get a preview window where you can scrub through frames, play the animation, and either save or discard your recording.
+
+## Installation (For Development)
+
+Want to try it out or contribute? Here's how to get started:
 
 ```bash
 git clone https://github.com/chaluvadis/vscode-gif-recorder.git
@@ -45,40 +47,29 @@ cd vscode-gif-recorder
 npm install
 ```
 
-Launch the extension in a VS Code Extension Development Host by pressing `F5`.
-
-## Usage in VS Code
-
-### Method 1: Using the Control Panel (Recommended)
-1. Run `GIF Recorder: Show Recording Controls` from the command palette to open the control panel.
-2. Click the **Start Recording** button in the panel.
-3. A red status bar indicator (🔴 Recording) appears, showing the recording is active.
-4. Perform the actions you want to capture. The control panel will not appear in the recording.
-5. Click the **Stop Recording** button when done.
-6. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
-7. Select your desired save location in the file dialog.
-8. After saving, choose **Open File** in the notification to view the generated GIF.
+Then press `F5` in VS Code to launch the extension in a development window.
 
 ## Configuration
 
-- `vscode-gif-recorder.outputDirectory`: default folder suggested when saving a recording. Defaults to `~/Downloads`, but accepts any absolute path, `~`, or paths relative to the first workspace folder.
+You can customize where your GIFs are saved by default:
 
-### Method 2: Using Command Palette
-1. Run `GIF Recorder: Start Recording` from the command palette.
-2. A red status bar indicator shows recording is active with frame count updates.
-3. Perform the actions you want to capture.
-4. Optionally run `GIF Recorder: Pause Recording` and `GIF Recorder: Resume Recording` to skip unwanted segments.
-5. Run `GIF Recorder: Stop Recording`. Review the capture in the preview panel, then choose **Save as GIF** or **Discard Recording**.
-6. Select your desired save location in the file dialog.
-7. After saving, choose **Open File** in the notification to view the generated GIF.
+- **Setting**: `vscode-gif-recorder.outputDirectory`
+- **Default**: `~/Downloads`
+- **Accepts**: Absolute paths, `~` for home directory, or paths relative to your workspace folder
 
-## Future Enhancements
+## What's Next?
 
-- Make FPS, quality, and destination defaults configurable through VS Code settings.
-- Add region capture or window selection before recording starts.
-- Support trimming or deleting frames from the preview before export.
-- Offer optional downscaling to reduce GIF size without manual editing.
+We're working on making this extension even better! Planned improvements include:
+
+- Configurable frame rate and quality settings
+- Ability to select specific windows or regions to record
+- Frame trimming and editing in the preview
+- Automatic GIF optimization to reduce file size
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with ❤️ for the VS Code community. Found a bug or have a suggestion? [Open an issue](https://github.com/chaluvadis/vscode-gif-recorder/issues)!
