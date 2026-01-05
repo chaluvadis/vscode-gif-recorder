@@ -27,9 +27,6 @@ jobs:
     - name: Install Packages
       run: npm i
 
-    - name: Compile extension
-      run: npm compile
-
     - name: Package extension
       run: |
         # Use the tag name as part of the VSIX filename when available.
@@ -40,7 +37,7 @@ jobs:
         OUT="vscode-gif-recorder-${TAG}.vsix"
         echo "OUT=${OUT}" >> $GITHUB_ENV
         echo "Packaging VSIX -> ${OUT}"
-        pnpm package --out "${OUT}"
+        npm run package --out "${OUT}"
       shell: bash
 
     - name: Get VSIX name
