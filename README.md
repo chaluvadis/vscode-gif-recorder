@@ -85,8 +85,8 @@ The extension now includes powerful optimization features to reduce GIF file siz
 #### Quality
 - **Setting**: `vscode-gif-recorder.quality`
 - **Default**: `10`
-- **Range**: 1-20 (lower is better)
-- **Description**: Controls the GIF encoding quality. Lower values produce smaller files but may reduce visual quality slightly.
+- **Range**: 1-20 (higher values improve quality at the cost of larger files)
+- **Description**: Controls the precision of the GIF color quantization algorithm. Lower values use more aggressive quantization (smaller files but reduced color accuracy), while higher values preserve more accurate colors (better visual quality but larger files).
 
 ### Why These Optimizations Matter
 
