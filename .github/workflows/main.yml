@@ -23,9 +23,19 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '24'
+        cache: 'pnpm'
 
-    - name: Install Packages
-      run: npm i
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.27.0
+        run_install: false
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build extension
+      run: pnpm run compile
 
     - name: Package extension
       run: |
@@ -37,7 +47,7 @@ jobs:
         OUT="vscode-gif-recorder-${TAG}.vsix"
         echo "OUT=${OUT}" >> $GITHUB_ENV
         echo "Packaging VSIX -> ${OUT}"
-        npm run package --out "${OUT}"
+        pnpm exec vsce package --out "${OUT}"
       shell: bash
 
     - name: Get VSIX name
@@ -60,7 +70,7 @@ jobs:
       run: |
         echo "Publishing ${VSIX_NAME} to Visual Studio Marketplace"
         # Publish using vsce and the PAT you stored in VSCE_TOKEN
-        npx vsce publish --packagePath "${VSIX_NAME}" --pat "${VSCE_TOKEN}"
+        pnpm exec vsce publish --packagePath "${VSIX_NAME}" --pat "${VSCE_TOKEN}"
       shell: bash
 
     - name: Create GitHub Release and upload VSIX
