@@ -46,7 +46,7 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
   const quality = options.quality || 10; // Lower is better (1-20)
   const algorithm = options.algorithm || 'octree'; // octree generally produces smaller files
   const useOptimizer = options.useOptimizer ?? true; // Enable optimizer by default
-  const threshold = options.threshold || 90; // Optimizer threshold (0-100, higher = more optimization)
+  const threshold = options.threshold ?? 90; // Optimizer threshold (0-100, higher = more optimization)
   const delay = Math.floor(1000 / fps); // Delay between frames in ms
 
   console.log(`Converting ${frames.length} frames to GIF...`);
