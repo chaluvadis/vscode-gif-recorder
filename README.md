@@ -29,8 +29,6 @@ Whether you're creating a quick demo, documenting a bug, or making a tutorial, G
 5. Preview your recording, then click **Save as GIF**
 6. Choose where to save it, and you're done!
 
-[]
-
 ### Using Commands
 
 If you prefer using the command palette directly:
