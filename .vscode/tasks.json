@@ -2,8 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "compile",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "run",
+        "compile"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -11,23 +15,31 @@
       "problemMatcher": [
         "$tsc"
       ],
-      "label": "npm: compile",
+      "label": "pnpm: compile",
       "detail": "tsc -p ./"
     },
     {
-      "type": "npm",
-      "script": "watch",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "run",
+        "watch"
+      ],
       "problemMatcher": [
         "$tsc-watch"
       ],
       "isBackground": true,
-      "label": "npm: watch",
+      "label": "pnpm: watch",
       "detail": "tsc -watch -p ./"
     },
     {
-      "type": "npm",
-      "script": "lint",
-      "label": "npm: lint",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "run",
+        "lint"
+      ],
+      "label": "pnpm: lint",
       "detail": "biome lint"
     }
   ]

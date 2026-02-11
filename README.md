@@ -46,7 +46,7 @@ Want to try it out or contribute? Here's how to get started:
 ```bash
 git clone https://github.com/chaluvadis/vscode-gif-recorder.git
 cd vscode-gif-recorder
-npm install
+pnpm install
 ```
 
 Then press `F5` in VS Code to launch the extension in a development window.
@@ -67,7 +67,7 @@ The extension now includes powerful optimization features to reduce GIF file siz
 #### Algorithm Selection
 - **Setting**: `vscode-gif-recorder.algorithm`
 - **Default**: `octree`
-- **Options**: 
+- **Options**:
   - `octree` - Generally produces smaller files, ideal for screen recordings with solid colors and text
   - `neuquant` - Neural network based, better for photographic content
 

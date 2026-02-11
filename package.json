@@ -3,6 +3,7 @@
   "displayName": "VS Code GIF Recorder",
   "description": "Record your VS Code actions and export them as GIFs",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.27.0",
   "icon": "media/icon.png",
   "publisher": "nomad-in-code",
   "engines": {
@@ -88,9 +89,10 @@
   "homepage": "https://github.com/chaluvadis/vscode-gif-recorder#readme",
   "scripts": {
     "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
     "lint": "biome lint",
     "format": "biome format --write",
-    "package": "npm run compile && vsce package"
+    "package": "pnpm run compile && pnpm exec vsce package"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -104,7 +106,7 @@
     "eslint": "^9.39.2",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.51.0"
+    "typescript-eslint": "^8.52.0"
   },
   "dependencies": {
     "gif-encoder-2": "^1.0.5",
