@@ -54,7 +54,7 @@ export function startRecording(): void {
 
       frames.push(frame);
       console.log(`Captured frame ${frames.length}`);
-      
+
       // Notify callback of new frame
       if (onFrameCapturedCallback) {
         try {
