@@ -75,6 +75,48 @@
           "minimum": 1,
           "maximum": 20,
           "description": "GIF encoding quality (1-20). Lower values result in lower visual quality and smaller files, while higher values produce better visual quality but larger files."
+        },
+        "vscode-gif-recorder.fps": {
+          "type": "number",
+          "default": 10,
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Frame rate for GIF recording (5-30 FPS). Lower FPS reduces file size but may appear less smooth. Recommended: 10-15 FPS for screen recordings."
+        },
+        "vscode-gif-recorder.qualityPreset": {
+          "type": "string",
+          "enum": [
+            "highQuality",
+            "balanced",
+            "smallFile",
+            "custom"
+          ],
+          "enumDescriptions": [
+            "High Quality - Best visual quality, larger file size (Quality: 15, FPS: 15)",
+            "Balanced - Good balance between quality and file size (Quality: 10, FPS: 10) - Default",
+            "Small File - Smallest file size, acceptable quality (Quality: 5, FPS: 8)",
+            "Custom - Use custom quality and FPS settings"
+          ],
+          "default": "balanced",
+          "description": "Quality preset that automatically configures quality, FPS, and optimization settings. Select 'custom' to use individual settings."
+        },
+        "vscode-gif-recorder.deduplicateFrames": {
+          "type": "boolean",
+          "default": true,
+          "description": "Skip duplicate or nearly-identical consecutive frames to reduce file size. Highly recommended for screen recordings with static content."
+        },
+        "vscode-gif-recorder.deduplicationThreshold": {
+          "type": "number",
+          "default": 99,
+          "minimum": 90,
+          "maximum": 100,
+          "description": "Frame similarity threshold percentage (90-100). Frames more similar than this threshold will be considered duplicates. Higher values are more strict (99 = 99% similar to be considered duplicate)."
+        },
+        "vscode-gif-recorder.maxWidth": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Maximum width for the output GIF in pixels. Set to 0 to disable scaling. If the captured frames exceed this width, they will be scaled down proportionally."
         }
       }
     }

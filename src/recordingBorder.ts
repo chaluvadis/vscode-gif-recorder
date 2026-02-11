@@ -28,10 +28,9 @@ export function showRecordingBorder(): void {
   statusBarItem.show();
 
   // Show notification with recording border theme
-  vscode.window.showInformationMessage(
-    '🔴 Recording Started - Your screen is being captured',
-    { modal: false }
-  );
+  vscode.window.showInformationMessage('🔴 Recording Started - Your screen is being captured', {
+    modal: false,
+  });
 }
 
 /**

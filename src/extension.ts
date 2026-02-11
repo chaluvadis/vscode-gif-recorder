@@ -69,6 +69,32 @@ function handleStartRecording(): void {
 }
 
 /**
+ * Helper function to get quality settings based on the selected preset.
+ */
+function getQualitySettings(configuration: vscode.WorkspaceConfiguration): {
+  quality: number;
+  fps: number;
+} {
+  const preset = configuration.get<string>('qualityPreset') ?? 'balanced';
+
+  switch (preset) {
+    case 'highQuality':
+      return { quality: 15, fps: 15 };
+    case 'smallFile':
+      return { quality: 5, fps: 8 };
+    case 'balanced':
+      return { quality: 10, fps: 10 };
+    case 'custom':
+      return {
+        quality: configuration.get<number>('quality') ?? 10,
+        fps: configuration.get<number>('fps') ?? 10,
+      };
+    default:
+      return { quality: 10, fps: 10 };
+  }
+}
+
+/**
  * Helper function to handle the complete stop recording workflow.
  */
 async function handleStopRecording(): Promise<void> {
@@ -119,7 +145,12 @@ async function handleStopRecording(): Promise<void> {
   const algorithm = configuration.get<'octree' | 'neuquant'>('algorithm') ?? 'octree';
   const useOptimizer = configuration.get<boolean>('useOptimizer') ?? true;
   const threshold = configuration.get<number>('optimizerThreshold') ?? 90;
-  const quality = configuration.get<number>('quality') ?? 10;
+  const deduplicateFrames = configuration.get<boolean>('deduplicateFrames') ?? true;
+  const deduplicationThreshold = configuration.get<number>('deduplicationThreshold') ?? 99;
+  const maxWidth = configuration.get<number>('maxWidth') ?? 0;
+
+  // Get quality and FPS from preset or custom settings
+  const { quality, fps } = getQualitySettings(configuration);
 
   // Show progress while converting
   await vscode.window.withProgress(
@@ -134,11 +165,14 @@ async function handleStopRecording(): Promise<void> {
       try {
         const outputPath = await convertToGif(frames, {
           outputPath: saveUri.fsPath,
-          fps: 10,
+          fps: fps,
           quality: quality,
           algorithm: algorithm,
           useOptimizer: useOptimizer,
           threshold: threshold,
+          deduplicateFrames: deduplicateFrames,
+          deduplicationThreshold: deduplicationThreshold,
+          maxWidth: maxWidth,
         });
 
         progress.report({ increment: 100, message: 'Complete!' });
