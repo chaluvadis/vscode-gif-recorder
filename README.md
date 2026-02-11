@@ -62,7 +62,30 @@ You can customize various settings to optimize your GIF recordings:
 
 ### Optimization Settings
 
-The extension now includes powerful optimization features to reduce GIF file sizes without sacrificing quality:
+The extension includes powerful optimization features to reduce GIF file sizes while maintaining quality:
+
+#### Quality Preset (Recommended)
+- **Setting**: `vscode-gif-recorder.qualityPreset`
+- **Default**: `balanced`
+- **Options**:
+  - `highQuality` - Best visual quality, larger file size (Quality: 15, FPS: 15)
+  - `balanced` - Good balance between quality and file size (Quality: 10, FPS: 10) - **Default**
+  - `smallFile` - Smallest file size, acceptable quality (Quality: 5, FPS: 8)
+  - `custom` - Use custom quality and FPS settings (see below)
+
+**Tip**: Start with the default `balanced` preset. Switch to `smallFile` if you need to minimize file sizes (e.g., for frequent sharing), or `highQuality` for demos requiring crisp visuals.
+
+#### Frame Rate (FPS)
+- **Setting**: `vscode-gif-recorder.fps`
+- **Default**: `10` (used when `qualityPreset` is set to `custom`)
+- **Range**: 5-30 FPS
+- **Description**: Higher FPS produces smoother animations but larger files. 10-15 FPS is typically ideal for screen recordings.
+
+#### Quality
+- **Setting**: `vscode-gif-recorder.quality`
+- **Default**: `10` (used when `qualityPreset` is set to `custom`)
+- **Range**: 1-20 (higher values improve quality at the cost of larger files)
+- **Description**: Controls the precision of the GIF color quantization algorithm. Lower values use more aggressive quantization (smaller files but reduced color accuracy).
 
 #### Algorithm Selection
 - **Setting**: `vscode-gif-recorder.algorithm`
@@ -71,10 +94,21 @@ The extension now includes powerful optimization features to reduce GIF file siz
   - `octree` - Generally produces smaller files, ideal for screen recordings with solid colors and text
   - `neuquant` - Neural network based, better for photographic content
 
+#### Frame Deduplication
+- **Setting**: `vscode-gif-recorder.deduplicateFrames`
+- **Default**: `true` (enabled)
+- **Description**: Automatically skips duplicate or nearly-identical consecutive frames to significantly reduce file size. Highly recommended for screen recordings where content may remain static for periods.
+
+#### Deduplication Threshold
+- **Setting**: `vscode-gif-recorder.deduplicationThreshold`
+- **Default**: `99`
+- **Range**: 90-100
+- **Description**: Frames that are more than this percentage similar will be considered duplicates and skipped. Higher values are more strict (99 = 99% similar to be considered duplicate).
+
 #### Optimizer
 - **Setting**: `vscode-gif-recorder.useOptimizer`
 - **Default**: `true` (enabled)
-- **Description**: Reduces file size by reusing color tables when consecutive frames are similar. Highly recommended for screen recordings where many frames contain similar content.
+- **Description**: Reduces file size by reusing color tables when consecutive frames are similar. Highly recommended for screen recordings.
 
 #### Optimizer Threshold
 - **Setting**: `vscode-gif-recorder.optimizerThreshold`
@@ -82,21 +116,52 @@ The extension now includes powerful optimization features to reduce GIF file siz
 - **Range**: 0-100
 - **Description**: Higher values enable more aggressive optimization. At 90%, the optimizer will reuse color tables when frames differ by less than 10%.
 
-#### Quality
-- **Setting**: `vscode-gif-recorder.quality`
-- **Default**: `10`
-- **Range**: 1-20 (higher values improve quality at the cost of larger files)
-- **Description**: Controls the precision of the GIF color quantization algorithm. Lower values use more aggressive quantization (smaller files but reduced color accuracy), while higher values preserve more accurate colors (better visual quality but larger files).
+#### Maximum Width
+- **Setting**: `vscode-gif-recorder.maxWidth`
+- **Default**: `0` (no scaling)
+- **Description**: Maximum width for the output GIF in pixels. If your captured frames exceed this width, they will be scaled down proportionally. Set to 0 to disable scaling. Useful for high-DPI displays where recordings may be unnecessarily large.
 
 ### Why These Optimizations Matter
 
-Screen recordings often have many similar frames, making them ideal candidates for optimization. With the optimizer enabled (default), you can expect:
+Screen recordings often contain:
+- **Static content**: Code editors, toolbars, and UI elements that don't change between frames
+- **Repetitive patterns**: Similar color palettes across frames
+- **High resolution**: Modern displays produce large frame sizes
 
-- **30-70% smaller file sizes** for typical VS Code screen recordings
+With the default optimizations enabled, you can expect:
+
+- **40-70% smaller file sizes** for typical VS Code screen recordings with frame deduplication
+- **30-50% smaller files** compared to basic encoding without optimization
 - Faster encoding times when frames have minimal changes
 - No perceptible quality loss for most use cases
 
-The default settings are optimized for the best balance between file size and quality for screen recordings.
+### Example Configurations
+
+**For Documentation/Tutorials** (best quality):
+```json
+{
+  "vscode-gif-recorder.qualityPreset": "highQuality"
+}
+```
+
+**For Quick Sharing** (smallest files):
+```json
+{
+  "vscode-gif-recorder.qualityPreset": "smallFile",
+  "vscode-gif-recorder.maxWidth": 1280
+}
+```
+
+**Custom Fine-tuning**:
+```json
+{
+  "vscode-gif-recorder.qualityPreset": "custom",
+  "vscode-gif-recorder.fps": 12,
+  "vscode-gif-recorder.quality": 8,
+  "vscode-gif-recorder.deduplicateFrames": true,
+  "vscode-gif-recorder.maxWidth": 1920
+}
+```
 
 ## License
 
