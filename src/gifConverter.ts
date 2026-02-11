@@ -46,6 +46,7 @@ function calculateFrameSimilarity(frame1: Buffer, frame2: Buffer): number {
 
   // Compare pixels (sampling for performance)
   const step = Math.max(1, Math.floor(totalPixels / 10000)); // Sample up to 10k pixels
+  const sampledPixels = Math.floor(totalPixels / step);
 
   for (let i = 0; i < frame1.length; i += step * 4) {
     // Compare RGB values (ignore alpha)
@@ -58,7 +59,7 @@ function calculateFrameSimilarity(frame1: Buffer, frame2: Buffer): number {
     }
   }
 
-  return (matchingPixels / (totalPixels / step)) * 100;
+  return (matchingPixels / sampledPixels) * 100;
 }
 
 /**
@@ -235,8 +236,11 @@ export async function convertToGif(frames: Frame[], options: GifOptions): Promis
     throw new Error('No frames could be processed for GIF conversion');
   }
 
+  const totalProcessed = framesAdded + framesSkipped;
+  const reductionPercent =
+    totalProcessed > 0 ? ((framesSkipped / totalProcessed) * 100).toFixed(1) : '0.0';
   console.log(
-    `Total frames added: ${framesAdded}, skipped: ${framesSkipped} (${((framesSkipped / frames.length) * 100).toFixed(1)}% reduction)`
+    `Total frames added: ${framesAdded}, skipped: ${framesSkipped} (${reductionPercent}% reduction)`
   );
 
   encoder.finish();
