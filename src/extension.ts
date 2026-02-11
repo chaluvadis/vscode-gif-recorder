@@ -150,7 +150,7 @@ async function handleStopRecording(): Promise<void> {
   const maxWidth = configuration.get<number>('maxWidth') ?? 0;
 
   // Get quality and FPS from preset or custom settings
-  const { quality, fps } = getQualitySettings(configuration);
+  const { quality, fps: targetFps } = getQualitySettings(configuration);
 
   // Show progress while converting
   await vscode.window.withProgress(
@@ -165,7 +165,7 @@ async function handleStopRecording(): Promise<void> {
       try {
         const outputPath = await convertToGif(frames, {
           outputPath: saveUri.fsPath,
-          fps: fps,
+          fps: targetFps,
           quality: quality,
           algorithm: algorithm,
           useOptimizer: useOptimizer,
