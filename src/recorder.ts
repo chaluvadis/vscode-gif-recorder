@@ -2,17 +2,70 @@
  * Recorder module for capturing VS Code screen activity.
  */
 
-import screenshot from 'screenshot-desktop';
+import { execFile } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { promisify } from 'node:util';
 import type { Frame } from './gifConverter';
+
+const execFileAsync = promisify(execFile);
+const readFileAsync = promisify(fs.readFile);
+const unlinkAsync = promisify(fs.unlink);
 
 let isRecording = false;
 let isPaused = false;
+let isCapturing = false; // Flag to prevent overlapping captures
 let captureInterval: NodeJS.Timeout | null = null;
 let frames: Frame[] = [];
 export const DEFAULT_FPS = 10;
 
 // Callback for frame capture events
 let onFrameCapturedCallback: ((frameCount: number) => void) | undefined;
+
+/**
+ * Capture screenshot on macOS using native screencapture command.
+ * Returns PNG buffer directly without using temp library.
+ */
+async function captureScreenshotMacOS(): Promise<Buffer> {
+  const tmpDir = os.tmpdir();
+  const tmpFile = path.join(
+    tmpDir,
+    `screenshot-${Date.now()}-${Math.random().toString(36).slice(2)}.png`
+  );
+
+  try {
+    console.log(`Capturing screenshot to: ${tmpFile}`);
+
+    // Capture screenshot to temp file
+    const { stdout, stderr } = await execFileAsync('screencapture', ['-x', '-t', 'png', tmpFile]);
+
+    if (stderr) {
+      console.warn(`screencapture stderr: ${stderr}`);
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(tmpFile)) {
+      throw new Error(`Screenshot file was not created: ${tmpFile}`);
+    }
+
+    // Read the file
+    const buffer = await readFileAsync(tmpFile);
+    console.log(`Read ${buffer.length} bytes from ${tmpFile}`);
+
+    // Delete the temp file
+    await unlinkAsync(tmpFile).catch(() => {}); // Ignore cleanup errors
+
+    return buffer;
+  } catch (error) {
+    console.error(
+      `Screenshot capture error: ${error instanceof Error ? error.message : String(error)}`
+    );
+    // Try to clean up on error
+    await unlinkAsync(tmpFile).catch(() => {});
+    throw error;
+  }
+}
 
 /**
  * Starts recording the VS Code window.
@@ -27,6 +80,7 @@ export function startRecording(): void {
   console.log('Starting GIF recording...');
   isRecording = true;
   isPaused = false;
+  isCapturing = false;
   frames = []; // Clear any existing frames
 
   // Calculate interval based on desired FPS
@@ -34,14 +88,38 @@ export function startRecording(): void {
 
   // Set up recording interval to capture frames
   captureInterval = setInterval(async () => {
-    // Skip capturing if recording is paused
-    if (isPaused) {
+    // Skip capturing if recording is paused or a capture is already in progress
+    if (isPaused || isCapturing) {
       return;
     }
 
+    isCapturing = true;
     try {
-      // Capture screenshot as PNG buffer
-      const imageBuffer = await screenshot({ format: 'png' });
+      // Capture screenshot as PNG buffer using native method
+      const imageBuffer = await captureScreenshotMacOS();
+
+      // Validate the captured buffer
+      if (!imageBuffer) {
+        console.error('Screenshot returned null/undefined');
+        return;
+      }
+
+      if (imageBuffer.length === 0) {
+        console.error('Screenshot returned empty buffer');
+        return;
+      }
+
+      // Check PNG signature (first 8 bytes)
+      const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const isValidPng =
+        imageBuffer.length >= 8 && Buffer.compare(imageBuffer.slice(0, 8), pngSignature) === 0;
+
+      if (!isValidPng) {
+        console.error(
+          `Invalid PNG signature. First 8 bytes: ${imageBuffer.slice(0, 8).toString('hex')}`
+        );
+        return;
+      }
 
       // Store frame with timestamp
       // Width and height are set to 0 and will be determined during GIF conversion
@@ -53,7 +131,9 @@ export function startRecording(): void {
       };
 
       frames.push(frame);
-      console.log(`Captured frame ${frames.length}`);
+      console.log(
+        `Captured frame ${frames.length}, buffer size: ${imageBuffer.length} bytes, valid PNG: ${isValidPng}`
+      );
 
       // Notify callback of new frame
       if (onFrameCapturedCallback) {
@@ -65,6 +145,8 @@ export function startRecording(): void {
       }
     } catch (error) {
       console.error('Error capturing frame:', error);
+    } finally {
+      isCapturing = false;
     }
   }, intervalMs);
 }
@@ -84,6 +166,7 @@ export function stopRecording(): Frame[] {
   console.log('Stopping GIF recording...');
   isRecording = false;
   isPaused = false;
+  isCapturing = false;
 
   // Stop capturing frames
   if (captureInterval) {
@@ -135,27 +218,6 @@ export function resumeRecording(): void {
 
   console.log('Resuming GIF recording...');
   isPaused = false;
-}
-
-/**
- * Returns the current recording status.
- */
-export function getRecordingStatus(): boolean {
-  return isRecording;
-}
-
-/**
- * Returns the current paused status.
- */
-export function getPausedStatus(): boolean {
-  return isPaused;
-}
-
-/**
- * Returns the number of frames captured so far.
- */
-export function getFrameCount(): number {
-  return frames.length;
 }
 
 /**

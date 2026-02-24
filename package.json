@@ -11,13 +11,12 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "vscode-gif-recorder.showControls",
-        "title": "GIF Recorder: Show Recording Controls"
-      },
       {
         "command": "vscode-gif-recorder.startRecording",
         "title": "GIF Recorder: Start Recording"
@@ -131,28 +130,31 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "esbuild": "node esbuild.js",
+    "esbuild:watch": "node esbuild.js --watch",
+    "esbuild:prod": "node esbuild.js --production",
     "lint": "biome lint",
     "format": "biome format --write",
-    "package": "pnpm run compile && vsce package --no-dependencies"
+    "package": "pnpm run esbuild && vsce package --no-dependencies"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.4",
     "@types/mocha": "^10.0.10",
-    "@types/node": "25.0.3",
+    "@types/node": "25.3.0",
     "@types/pngjs": "^6.0.5",
-    "@types/vscode": "^1.107.0",
+    "@types/vscode": "^1.109.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.27.3",
     "eslint": "^10.0.2",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.52.0"
+    "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
-    "gif-encoder-2": "^1.0.5",
-    "pngjs": "^7.0.0",
-    "screenshot-desktop": "^1.15.3"
+    "gif-encoder": "^0.7.2",
+    "screenshot-desktop": "^1.15.3",
+    "upng-js": "^2.1.0"
   }
 }

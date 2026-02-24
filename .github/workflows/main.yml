@@ -22,10 +22,10 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 24
+        node-version: 22
 
     - name: Install pnpm
-        run: npm install -g pnpm
+      run: npm install -g pnpm
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -35,20 +35,10 @@ jobs:
 
     - name: Package extension
       run: |
-        TAG="${{ inputs.tag }}"
-        if [ -z "$TAG" ]; then
-          TAG="$(echo "${GITHUB_SHA}" | cut -c1-7)"
-        fi
-        OUT="vscode-gif-recorder-${TAG}.vsix"
-        echo "OUT=${OUT}" >> $GITHUB_ENV
-        echo "Packaging VSIX -> ${OUT}"
-        pnpm exec vsce package --out "${OUT}"
+        TAG="${GITHUB_REF#refs/tags/}"
+        echo "VSIX_NAME=vscode-gif-recorder-${TAG}.vsix" >> $GITHUB_ENV
+        pnpm exec vsce package --out "vscode-gif-recorder-${TAG}.vsix"
       shell: bash
-
-    - name: Get VSIX name
-      id: get_version
-      run: |
-        echo "VSIX_NAME=$(ls *.vsix | head -n 1)" >> $GITHUB_ENV
 
     - name: Publish to Visual Studio Marketplace
       env:
@@ -56,14 +46,12 @@ jobs:
         VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
       run: |
         echo "Publishing ${VSIX_NAME} to Visual Studio Marketplace"
-        # Publish using vsce and the PAT you stored in VSCE_TOKEN
         pnpm exec vsce publish --packagePath "${VSIX_NAME}" --pat "${VSCE_TOKEN}"
       shell: bash
 
     - name: Create GitHub Release and upload VSIX
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ inputs.tag }}
         files: ${{ env.VSIX_NAME }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

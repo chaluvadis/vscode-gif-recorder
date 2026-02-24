@@ -8,20 +8,31 @@ import {
   resumeRecording,
   setOnFrameCaptured,
   clearOnFrameCaptured,
-  getRecordingStatus,
 } from './recorder';
 import { convertToGif } from './gifConverter';
 import { showPreview } from './previewPanel';
-import {
-  showRecordingControlPanel,
-  setRecordingState,
-  closeRecordingControlPanel,
-} from './recordingControlPanel';
 import {
   showRecordingBorder,
   hideRecordingBorder,
   updateRecordingIndicator,
 } from './recordingBorder';
+
+// Status bar items for recording controls
+let startRecordingStatusBarItem: vscode.StatusBarItem;
+let stopRecordingStatusBarItem: vscode.StatusBarItem;
+
+/**
+ * Update status bar items based on recording state.
+ */
+function updateStatusBarItems(isRecording: boolean): void {
+  if (isRecording) {
+    startRecordingStatusBarItem.hide();
+    stopRecordingStatusBarItem.show();
+  } else {
+    startRecordingStatusBarItem.show();
+    stopRecordingStatusBarItem.hide();
+  }
+}
 
 function getDefaultOutputDirectory(): string {
   const configuration = vscode.workspace.getConfiguration('vscode-gif-recorder');
@@ -62,10 +73,8 @@ function handleStartRecording(): void {
   startRecording();
   // Show visual indicators
   showRecordingBorder();
-  setRecordingState(true);
-  // vscode.window.showInformationMessage(
-  //   `GIF recording started! Capturing screen at ${DEFAULT_FPS} FPS...`
-  // );
+  updateStatusBarItems(true);
+  // Notification removed to prevent it from being captured in the recording
 }
 
 /**
@@ -103,7 +112,7 @@ async function handleStopRecording(): Promise<void> {
   // Clear frame capture callback and hide visual indicators
   clearOnFrameCaptured();
   hideRecordingBorder();
-  setRecordingState(false);
+  updateStatusBarItems(false);
 
   if (frames.length === 0) {
     vscode.window.showWarningMessage(
@@ -112,7 +121,7 @@ async function handleStopRecording(): Promise<void> {
     return;
   }
 
-  vscode.window.showInformationMessage(`Recording stopped! Captured ${frames.length} frames.`);
+  // Notification removed to prevent it from being captured if a new recording starts
 
   // Show preview and wait for user decision
   const userAction = await showPreview(frames);
@@ -203,13 +212,32 @@ async function handleStopRecording(): Promise<void> {
 export function activate(context: vscode.ExtensionContext) {
   console.log('vscode-gif-recorder is now active!');
 
-  // Register command to show recording controls
-  const showControlsCommand = vscode.commands.registerCommand(
-    'vscode-gif-recorder.showControls',
-    () => {
-      showRecordingControlPanel(handleStartRecording, handleStopRecording, getRecordingStatus());
-    }
+  // Create status bar items for recording controls
+  // Start recording button
+  startRecordingStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
   );
+  startRecordingStatusBarItem.text = '$(record) Start Recording';
+  startRecordingStatusBarItem.tooltip = 'Start GIF Recording';
+  startRecordingStatusBarItem.command = 'vscode-gif-recorder.startRecording';
+  startRecordingStatusBarItem.show();
+
+  // Stop recording button
+  stopRecordingStatusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left,
+    100
+  );
+  stopRecordingStatusBarItem.text = '$(debug-stop) Stop Recording';
+  stopRecordingStatusBarItem.tooltip = 'Stop GIF Recording';
+  stopRecordingStatusBarItem.command = 'vscode-gif-recorder.stopRecording';
+  stopRecordingStatusBarItem.backgroundColor = new vscode.ThemeColor(
+    'statusBarItem.errorBackground'
+  );
+  stopRecordingStatusBarItem.hide();
+
+  context.subscriptions.push(startRecordingStatusBarItem);
+  context.subscriptions.push(stopRecordingStatusBarItem);
 
   // Register the start recording command
   const startRecordingCommand = vscode.commands.registerCommand(
@@ -220,7 +248,16 @@ export function activate(context: vscode.ExtensionContext) {
   // Register the stop recording command
   const stopRecordingCommand = vscode.commands.registerCommand(
     'vscode-gif-recorder.stopRecording',
-    handleStopRecording
+    async () => {
+      try {
+        await handleStopRecording();
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to stop recording: ${error instanceof Error ? error.message : String(error)}`
+        );
+        console.error('Stop recording error:', error);
+      }
+    }
   );
 
   // Register the pause recording command
@@ -228,7 +265,7 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.pauseRecording',
     () => {
       pauseRecording();
-      vscode.window.showInformationMessage('GIF recording paused.');
+      // Notification removed to prevent it from being captured in the recording
     }
   );
 
@@ -237,11 +274,10 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.resumeRecording',
     () => {
       resumeRecording();
-      vscode.window.showInformationMessage('GIF recording resumed!');
+      // Notification removed to prevent it from being captured in the recording
     }
   );
 
-  context.subscriptions.push(showControlsCommand);
   context.subscriptions.push(startRecordingCommand);
   context.subscriptions.push(stopRecordingCommand);
   context.subscriptions.push(pauseRecordingCommand);
@@ -257,8 +293,11 @@ export function deactivate() {
 
   // Clean up resources
   hideRecordingBorder();
-  closeRecordingControlPanel();
   clearOnFrameCaptured();
+
+  // Dispose status bar items
+  startRecordingStatusBarItem?.dispose();
+  stopRecordingStatusBarItem?.dispose();
 
   console.log('vscode-gif-recorder is now deactivated.');
 }
