@@ -16,7 +16,7 @@ export function showRecordingBorder(): void {
   if (!statusBarItem) {
     statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      1000 // High priority to appear first
+      99 // Lower priority than start/stop buttons (100) so it appears after them
     );
   }
 
@@ -26,11 +26,6 @@ export function showRecordingBorder(): void {
   statusBarItem.tooltip = 'GIF Recording in Progress - Click to stop';
   statusBarItem.command = 'vscode-gif-recorder.stopRecording';
   statusBarItem.show();
-
-  // Show notification with recording border theme
-  vscode.window.showInformationMessage('🔴 Recording Started - Your screen is being captured', {
-    modal: false,
-  });
 }
 
 /**

@@ -22,3 +22,10 @@ package.json
 tsconfig.json
 biome.json
 node_modules/@biomejs
+node_modules/@types
+node_modules/esbuild
+node_modules/typescript
+node_modules/@vscode
+node_modules/eslint
+node_modules/npm-run-all
+node_modules/typescript-eslint

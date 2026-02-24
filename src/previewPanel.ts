@@ -6,10 +6,61 @@ import * as vscode from 'vscode';
 import type { Frame } from './gifConverter';
 import { DEFAULT_FPS } from './recorder';
 
+// Maximum number of frames to cache (LRU eviction when exceeded)
+const MAX_CACHE_SIZE = 50;
+
 let currentPanel: vscode.WebviewPanel | undefined;
 let currentFrames: Frame[] = [];
 let previewCallback: ((action: 'save' | 'discard') => void) | undefined;
-const frameCache: Map<number, string> = new Map();
+
+/**
+ * LRU Cache implementation for frame data.
+ * Uses a Map which maintains insertion order, allowing LRU eviction.
+ */
+class LRUCache<K, V> {
+  private cache: Map<K, V>;
+  private maxSize: number;
+
+  constructor(maxSize: number) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+  }
+
+  get(key: K): V | undefined {
+    const value = this.cache.get(key);
+    if (value !== undefined) {
+      // Move to end (most recently used)
+      this.cache.delete(key);
+      this.cache.set(key, value);
+    }
+    return value;
+  }
+
+  set(key: K, value: V): void {
+    // Remove if exists (to update position)
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    }
+    // Evict oldest if at capacity
+    else if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
+    }
+    this.cache.set(key, value);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  get size(): number {
+    return this.cache.size;
+  }
+}
+
+const frameCache = new LRUCache<number, string>(MAX_CACHE_SIZE);
 
 /**
  * Shows a preview of the recorded frames in a webview panel.
