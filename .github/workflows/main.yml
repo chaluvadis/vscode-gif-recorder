@@ -1,57 +1,64 @@
-name: Build & Release VS Code Extension
+name: Build & Publish VS Code Extension
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
-  build-and-release:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Ensures tags are available
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-    - name: Install pnpm
-      run: npm install -g pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-    - name: Build extension
-      run: pnpm run compile
+      - name: Compile TypeScript
+        run: pnpm run compile
 
-    - name: Package extension
-      run: |
-        TAG="${GITHUB_REF#refs/tags/}"
-        echo "VSIX_NAME=vscode-gif-recorder-${TAG}.vsix" >> $GITHUB_ENV
-        pnpm exec vsce package --out "vscode-gif-recorder-${TAG}.vsix"
-      shell: bash
+      - name: Package extension
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          fi
+          OUT="vscode-gif-recorder-${TAG}.vsix"
+          echo "OUT=${OUT}" >> $GITHUB_ENV
+          echo "Packaging VSIX -> ${OUT}"
+          pnpm exec vsce package --no-dependencies --out "${OUT}"
+        shell: bash
 
-    - name: Publish to Visual Studio Marketplace
-      env:
-        VSIX_NAME: ${{ env.VSIX_NAME }}
-        VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
-      run: |
-        echo "Publishing ${VSIX_NAME} to Visual Studio Marketplace"
-        pnpm exec vsce publish --packagePath "${VSIX_NAME}" --pat "${VSCE_TOKEN}"
-      shell: bash
+      - name: Get version from tag
+        id: get_version
+        run: |
+          echo "VSIX_NAME=$(ls *.vsix | head -n 1)" >> $GITHUB_ENV
 
-    - name: Create GitHub Release and upload VSIX
-      uses: softprops/action-gh-release@v2
-      with:
-        files: ${{ env.VSIX_NAME }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to Visual Studio Marketplace
+        run: pnpm exec vsce publish --packagePath "${{ env.VSIX_NAME }}" --pat "${{ secrets.VSCE_TOKEN }}"
+
+      - name: Upload VSIX artifact and create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: ${{ env.VSIX_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
