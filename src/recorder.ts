@@ -38,7 +38,7 @@ async function captureScreenshotMacOS(): Promise<Buffer> {
     console.log(`Capturing screenshot to: ${tmpFile}`);
 
     // Capture screenshot to temp file
-    const { stdout, stderr } = await execFileAsync('screencapture', ['-x', '-t', 'png', tmpFile]);
+    const { stderr } = await execFileAsync('screencapture', ['-x', '-t', 'png', tmpFile]);
 
     if (stderr) {
       console.warn(`screencapture stderr: ${stderr}`);
