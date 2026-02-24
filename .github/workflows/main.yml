@@ -22,14 +22,10 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '24'
-        cache: 'pnpm'
+        node-version: 24
 
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 10.27.0
-        run_install: false
+    - name: Install pnpm
+        run: npm install -g pnpm
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -39,8 +35,7 @@ jobs:
 
     - name: Package extension
       run: |
-        # Use the tag name as part of the VSIX filename when available.
-        TAG="${{ github.ref_name }}"
+        TAG="${{ inputs.tag }}"
         if [ -z "$TAG" ]; then
           TAG="$(echo "${GITHUB_SHA}" | cut -c1-7)"
         fi
@@ -55,14 +50,6 @@ jobs:
       run: |
         echo "VSIX_NAME=$(ls *.vsix | head -n 1)" >> $GITHUB_ENV
 
-    - name: Check VSCE token
-      run: |
-        if [ -z "${{ secrets.VSCE_TOKEN }}" ]; then
-          echo "ERROR: VSCE_TOKEN repository secret is not set. Add it in Settings → Secrets and variables → Actions → New repository secret (name: VSCE_TOKEN)." >&2
-          exit 1
-        fi
-      shell: bash
-
     - name: Publish to Visual Studio Marketplace
       env:
         VSIX_NAME: ${{ env.VSIX_NAME }}
@@ -76,6 +63,7 @@ jobs:
     - name: Create GitHub Release and upload VSIX
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ inputs.tag }}
         files: ${{ env.VSIX_NAME }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
