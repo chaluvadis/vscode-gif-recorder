@@ -1,6 +1,14 @@
 name: Build & Publish VS Code Extension
 
 on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
   workflow_dispatch:
     inputs:
       tag:
@@ -12,28 +20,61 @@ permissions:
   contents: write
 
 jobs:
-  build-and-publish:
+  lint-and-test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
+          cache: 'pnpm'
 
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm exec tsc -p ./ --noEmit
+
+      - name: Lint
+        run: pnpm exec biome lint .
+
+      - name: Run unit tests
+        run: pnpm exec mocha --ui tdd --reporter spec out/test/suite/gifProcessing.test.js
+
+  build-and-publish:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install pnpm
+        run: npm install -g pnpm@11
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Compile TypeScript
         run: pnpm run compile
+
+      - name: Build production bundles
+        run: pnpm run esbuild:prod
 
       - name: Package extension
         run: |
@@ -53,6 +94,7 @@ jobs:
           echo "VSIX_NAME=$(ls *.vsix | head -n 1)" >> $GITHUB_ENV
 
       - name: Publish to Visual Studio Marketplace
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
         run: pnpm exec vsce publish --packagePath "${{ env.VSIX_NAME }}" --pat "${{ secrets.VSCE_TOKEN }}"
 
       - name: Upload VSIX artifact and create GitHub Release

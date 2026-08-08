@@ -2,17 +2,17 @@
   "name": "vscode-gif-recorder",
   "displayName": "VS Code GIF Recorder",
   "description": "Record your VS Code actions and export them as GIFs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "icon": "media/icon.png",
   "publisher": "nomad-in-code",
   "engines": {
-    "vscode": "^1.109.0"
+    "vscode": "^1.125.0"
   },
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onCommand:vscode-gif-recorder.startRecording"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -42,30 +42,17 @@
           "markdownDescription": "Default directory used when prompting to save a recording. Use an absolute path, `~` for the home directory, or a path relative to the first workspace folder.",
           "default": "~/Downloads"
         },
-        "vscode-gif-recorder.algorithm": {
-          "type": "string",
-          "enum": [
-            "octree",
-            "neuquant"
-          ],
-          "enumDescriptions": [
-            "Octree - Generally produces smaller files, better for screen recordings with solid colors",
-            "NeuQuant - Neural network based, better for photographic content"
-          ],
-          "default": "octree",
-          "description": "Algorithm used for GIF color quantization"
-        },
         "vscode-gif-recorder.useOptimizer": {
           "type": "boolean",
           "default": true,
-          "description": "Enable optimizer to reduce file size by reusing color tables for similar frames"
+          "markdownDescription": "Enable GIF optimization to reduce file size. *(Feature pending implementation)*"
         },
         "vscode-gif-recorder.optimizerThreshold": {
           "type": "number",
           "default": 90,
           "minimum": 0,
           "maximum": 100,
-          "description": "Optimizer threshold percentage (0-100). Higher values enable more aggressive optimization."
+          "markdownDescription": "Optimizer threshold (0-100). Higher values enable more aggressive optimization. *(Feature pending implementation)*"
         },
         "vscode-gif-recorder.quality": {
           "type": "number",
@@ -135,26 +122,24 @@
     "esbuild:prod": "node esbuild.js --production",
     "lint": "biome lint",
     "format": "biome format --write",
-    "package": "pnpm run esbuild && vsce package --no-dependencies"
+    "test": "tsc -p ./ && mocha --ui tdd --reporter spec out/test/suite/*.test.js",
+    "package": "pnpm run esbuild:prod && vsce package --no-dependencies"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
+    "@biomejs/biome": "^2.5.7",
     "@types/mocha": "^10.0.10",
-    "@types/node": "25.3.0",
-    "@types/pngjs": "^6.0.5",
-    "@types/vscode": "^1.109.0",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2",
-    "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.27.3",
-    "eslint": "^10.0.2",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1"
+    "@types/node": "26.2.0",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.1",
+    "mocha": "^11.8.0",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "gif-encoder": "^0.7.2",
-    "screenshot-desktop": "^1.15.3",
+    "screenshot-desktop": "1.15.4",
     "upng-js": "^2.1.0"
   }
 }

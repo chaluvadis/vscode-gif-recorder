@@ -1,31 +1,50 @@
+# Source files (esbuild bundles everything into extension.js)
+src/**
+
+# Build config and tools
+esbuild.js
+**/tsconfig.json
+biome.json
+
+# VS Code / test config
 .vscode/**
 .vscode-test/**
-src/**
+.vscode-test-web/**
+vscode-test*/**
+
+# Lock files and workspace config (not needed at runtime)
+package-lock.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+.yarnrc*
 .gitignore
-.yarnrc
-esbuild.js
+.DS_Store
+
+# Documentation
+README.md
+readme.md
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
 vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
-**/*.map
-**/*.ts
-**/.vscode-test.*
-**/obj/
-**/testdata/
+
+# Tests / tools / CI
+obj/
+testdata/
 tools/**
 .github/**
-.vscode-test-web/**
-.vscode-test/**
-readme.md
-package-lock.json
-package.json
-tsconfig.json
-biome.json
-node_modules/@biomejs
-node_modules/@types
-node_modules/esbuild
-node_modules/typescript
-node_modules/@vscode
-node_modules/eslint
-node_modules/npm-run-all
-node_modules/typescript-eslint
+
+# TypeScript source and source maps (esbuild output only)
+**/*.ts
+**/*.map
+
+# Stale tsc output files (esbuild bundles all into extension.js and worker)
+out/*.js
+out/test/**
+!out/extension.js
+!out/worker/gifConverterWorker.js
+
+# Unused large media files (only referenced in README)
+media/recording.gif
+media/logo.svg

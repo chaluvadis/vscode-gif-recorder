@@ -1,235 +1,190 @@
 /**
  * Recorder module for capturing VS Code screen activity.
+ * Provides cross-platform screen capture via native tools (macOS) and screenshot-desktop (Windows/Linux).
  */
 
 import { execFile } from 'node:child_process';
-import * as fs from 'node:fs';
+import { readFile, unlink } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { promisify } from 'node:util';
+import screenshot from 'screenshot-desktop';
 import type { Frame } from './gifConverter';
 
 const execFileAsync = promisify(execFile);
-const readFileAsync = promisify(fs.readFile);
-const unlinkAsync = promisify(fs.unlink);
 
-let isRecording = false;
-let isPaused = false;
-let isCapturing = false; // Flag to prevent overlapping captures
-let captureInterval: NodeJS.Timeout | null = null;
-let frames: Frame[] = [];
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const TMP_SCREENSHOT_FILE = path.join(os.tmpdir(), 'vscode-gif-recorder-screenshot.png');
+
 export const DEFAULT_FPS = 10;
 
-// Callback for frame capture events
-let onFrameCapturedCallback: ((frameCount: number) => void) | undefined;
+class Recorder {
+  private isRecording = false;
+  private isPaused = false;
+  private isCapturing = false;
+  private captureInterval: NodeJS.Timeout | null = null;
+  private frames: Frame[] = [];
+  private onFrameCapturedCallback: ((frameCount: number) => void) | undefined;
 
-/**
- * Capture screenshot on macOS using native screencapture command.
- * Returns PNG buffer directly without using temp library.
- */
-async function captureScreenshotMacOS(): Promise<Buffer> {
-  const tmpDir = os.tmpdir();
-  const tmpFile = path.join(
-    tmpDir,
-    `screenshot-${Date.now()}-${Math.random().toString(36).slice(2)}.png`
-  );
-
-  try {
-    console.log(`Capturing screenshot to: ${tmpFile}`);
-
-    // Capture screenshot to temp file
-    const { stderr } = await execFileAsync('screencapture', ['-x', '-t', 'png', tmpFile]);
-
-    if (stderr) {
-      console.warn(`screencapture stderr: ${stderr}`);
+  /**
+   * Capture a screenshot using the platform-appropriate method.
+   * macOS: uses native screencapture (fast, no dependencies)
+   * Windows/Linux: uses screenshot-desktop
+   */
+  private async captureScreenshot(): Promise<Buffer> {
+    if (process.platform === 'darwin') {
+      return this.captureScreenshotMacOS();
     }
-
-    // Check if file exists
-    if (!fs.existsSync(tmpFile)) {
-      throw new Error(`Screenshot file was not created: ${tmpFile}`);
-    }
-
-    // Read the file
-    const buffer = await readFileAsync(tmpFile);
-    console.log(`Read ${buffer.length} bytes from ${tmpFile}`);
-
-    // Delete the temp file
-    await unlinkAsync(tmpFile).catch(() => {}); // Ignore cleanup errors
-
-    return buffer;
-  } catch (error) {
-    console.error(
-      `Screenshot capture error: ${error instanceof Error ? error.message : String(error)}`
-    );
-    // Try to clean up on error
-    await unlinkAsync(tmpFile).catch(() => {});
-    throw error;
-  }
-}
-
-/**
- * Starts recording the VS Code window.
- * Captures screen frames at the specified frame rate and stores them in memory.
- */
-export function startRecording(): void {
-  if (isRecording) {
-    console.log('Recording is already in progress.');
-    return;
+    return this.captureScreenshotCrossPlatform();
   }
 
-  console.log('Starting GIF recording...');
-  isRecording = true;
-  isPaused = false;
-  isCapturing = false;
-  frames = []; // Clear any existing frames
+  /**
+   * Capture screenshot on macOS using native screencapture command.
+   * Uses -x to suppress the shutter sound.
+   */
+  private async captureScreenshotMacOS(): Promise<Buffer> {
+    try {
+      await execFileAsync('screencapture', ['-x', '-t', 'png', TMP_SCREENSHOT_FILE]);
+      const buffer = await readFile(TMP_SCREENSHOT_FILE);
+      await unlink(TMP_SCREENSHOT_FILE).catch(() => {});
+      return buffer;
+    } catch (error) {
+      await unlink(TMP_SCREENSHOT_FILE).catch(() => {});
+      throw error;
+    }
+  }
 
-  // Calculate interval based on desired FPS
-  const intervalMs = Math.floor(1000 / DEFAULT_FPS);
+  /**
+   * Capture screenshot on Windows/Linux using screenshot-desktop.
+   */
+  private async captureScreenshotCrossPlatform(): Promise<Buffer> {
+    return screenshot({ format: 'png' });
+  }
 
-  // Set up recording interval to capture frames
-  captureInterval = setInterval(async () => {
-    // Skip capturing if recording is paused or a capture is already in progress
-    if (isPaused || isCapturing) {
+  /**
+   * Starts recording the VS Code window.
+   * Captures screen frames at the specified frame rate and stores them in memory.
+   */
+  start(): void {
+    if (this.isRecording) {
       return;
     }
 
-    isCapturing = true;
-    try {
-      // Capture screenshot as PNG buffer using native method
-      const imageBuffer = await captureScreenshotMacOS();
+    this.isRecording = true;
+    this.isPaused = false;
+    this.isCapturing = false;
+    this.frames = [];
 
-      // Validate the captured buffer
-      if (!imageBuffer) {
-        console.error('Screenshot returned null/undefined');
+    const intervalMs = Math.floor(1000 / DEFAULT_FPS);
+
+    this.captureInterval = setInterval(async () => {
+      if (this.isPaused || this.isCapturing) {
         return;
       }
 
-      if (imageBuffer.length === 0) {
-        console.error('Screenshot returned empty buffer');
-        return;
-      }
+      this.isCapturing = true;
+      try {
+        const imageBuffer = await this.captureScreenshot();
 
-      // Check PNG signature (first 8 bytes)
-      const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-      const isValidPng =
-        imageBuffer.length >= 8 && Buffer.compare(imageBuffer.slice(0, 8), pngSignature) === 0;
-
-      if (!isValidPng) {
-        console.error(
-          `Invalid PNG signature. First 8 bytes: ${imageBuffer.slice(0, 8).toString('hex')}`
-        );
-        return;
-      }
-
-      // Store frame with timestamp
-      // Width and height are set to 0 and will be determined during GIF conversion
-      const frame: Frame = {
-        data: imageBuffer,
-        timestamp: Date.now(),
-        width: 0,
-        height: 0,
-      };
-
-      frames.push(frame);
-      console.log(
-        `Captured frame ${frames.length}, buffer size: ${imageBuffer.length} bytes, valid PNG: ${isValidPng}`
-      );
-
-      // Notify callback of new frame
-      if (onFrameCapturedCallback) {
-        try {
-          onFrameCapturedCallback(frames.length);
-        } catch (callbackError) {
-          console.error('Error in onFrameCapturedCallback:', callbackError);
+        if (!imageBuffer || imageBuffer.length === 0) {
+          return;
         }
+
+        const isValidPng =
+          imageBuffer.length >= 8 && Buffer.compare(imageBuffer.slice(0, 8), PNG_SIGNATURE) === 0;
+
+        if (!isValidPng) {
+          return;
+        }
+
+        this.frames.push({
+          data: imageBuffer,
+          timestamp: Date.now(),
+          width: 0,
+          height: 0,
+        });
+
+        // Warn if recording is getting long (memory consideration)
+        const frameCount = this.frames.length;
+        if (frameCount === 100) {
+          console.error('Recording is over 100 frames — consider stopping soon to conserve memory');
+        }
+
+        this.onFrameCapturedCallback?.(frameCount);
+      } catch (error) {
+        console.error('Error capturing frame:', error);
+      } finally {
+        this.isCapturing = false;
       }
-    } catch (error) {
-      console.error('Error capturing frame:', error);
-    } finally {
-      isCapturing = false;
+    }, intervalMs);
+  }
+
+  /**
+   * Stops the ongoing recording and returns captured frames.
+   * Clears the recording interval and resets the recording state.
+   */
+  stop(): Frame[] {
+    if (!this.isRecording) {
+      return [];
     }
-  }, intervalMs);
-}
 
-/**
- * Stops the ongoing recording and returns captured frames.
- * Clears the recording interval and resets the recording state.
- *
- * @returns Array of captured frames
- */
-export function stopRecording(): Frame[] {
-  if (!isRecording) {
-    console.log('No recording in progress.');
-    return [];
+    this.isRecording = false;
+    this.isPaused = false;
+    this.isCapturing = false;
+
+    if (this.captureInterval) {
+      clearInterval(this.captureInterval);
+      this.captureInterval = null;
+    }
+
+    const capturedFrames = [...this.frames];
+    this.frames = [];
+
+    return capturedFrames;
   }
 
-  console.log('Stopping GIF recording...');
-  isRecording = false;
-  isPaused = false;
-  isCapturing = false;
-
-  // Stop capturing frames
-  if (captureInterval) {
-    clearInterval(captureInterval);
-    captureInterval = null;
+  /**
+   * Pauses the ongoing recording.
+   * The capture interval continues but frames are skipped while paused.
+   */
+  pause(): void {
+    if (!this.isRecording || this.isPaused) {
+      return;
+    }
+    this.isPaused = true;
   }
 
-  console.log(`Recording stopped. Captured ${frames.length} frames.`);
-
-  // Return frames and reset for next recording
-  const capturedFrames = [...frames];
-  frames = [];
-
-  return capturedFrames;
-}
-
-/**
- * Pauses the ongoing recording.
- * The capture interval continues but frames are skipped while paused.
- */
-export function pauseRecording(): void {
-  if (!isRecording) {
-    console.log('No recording in progress to pause.');
-    return;
+  /**
+   * Resumes a paused recording.
+   */
+  resume(): void {
+    if (!this.isRecording || !this.isPaused) {
+      return;
+    }
+    this.isPaused = false;
   }
 
-  if (isPaused) {
-    console.log('Recording is already paused.');
-    return;
+  /**
+   * Sets a callback to be invoked when a new frame is captured.
+   */
+  setOnFrameCaptured(callback: (frameCount: number) => void): void {
+    this.onFrameCapturedCallback = callback;
   }
 
-  console.log('Pausing GIF recording...');
-  isPaused = true;
-}
-
-/**
- * Resumes a paused recording.
- */
-export function resumeRecording(): void {
-  if (!isRecording) {
-    console.log('No recording in progress to resume.');
-    return;
+  /**
+   * Clears the frame capture callback.
+   */
+  clearOnFrameCaptured(): void {
+    this.onFrameCapturedCallback = undefined;
   }
-
-  if (!isPaused) {
-    console.log('Recording is not paused.');
-    return;
-  }
-
-  console.log('Resuming GIF recording...');
-  isPaused = false;
 }
 
-/**
- * Sets a callback to be invoked when a new frame is captured.
- */
-export function setOnFrameCaptured(callback: (frameCount: number) => void): void {
-  onFrameCapturedCallback = callback;
-}
+const recorder = new Recorder();
 
-/**
- * Clears the frame capture callback.
- */
-export function clearOnFrameCaptured(): void {
-  onFrameCapturedCallback = undefined;
-}
+export const startRecording = () => recorder.start();
+export const stopRecording = () => recorder.stop();
+export const pauseRecording = () => recorder.pause();
+export const resumeRecording = () => recorder.resume();
+export const setOnFrameCaptured = (callback: (frameCount: number) => void) =>
+  recorder.setOnFrameCaptured(callback);
+export const clearOnFrameCaptured = () => recorder.clearOnFrameCaptured();

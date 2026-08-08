@@ -9,13 +9,13 @@ import {
   setOnFrameCaptured,
   clearOnFrameCaptured,
 } from './recorder';
-import { convertToGif } from './gifConverter';
+import { convertToGif, terminateWorker } from './gifConverter';
 import { showPreview } from './previewPanel';
 import {
-  showRecordingBorder,
-  hideRecordingBorder,
+  showRecordingIndicator,
+  hideRecordingIndicator,
   updateRecordingIndicator,
-} from './recordingBorder';
+} from './recordingIndicator';
 
 // Status bar items for recording controls
 let startRecordingStatusBarItem: vscode.StatusBarItem;
@@ -47,8 +47,9 @@ function getDefaultOutputDirectory(): string {
         resolved = path.join(os.homedir(), trimmed.slice(1));
       } else if (!path.isAbsolute(trimmed)) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (workspaceFolders && workspaceFolders.length > 0) {
-          resolved = path.join(workspaceFolders[0].uri.fsPath, trimmed);
+        const firstFolder = workspaceFolders?.[0];
+        if (firstFolder) {
+          resolved = path.join(firstFolder.uri.fsPath, trimmed);
         } else {
           resolved = path.join(os.homedir(), trimmed);
         }
@@ -71,10 +72,8 @@ function handleStartRecording(): void {
   });
 
   startRecording();
-  // Show visual indicators
-  showRecordingBorder();
+  showRecordingIndicator();
   updateStatusBarItems(true);
-  // Notification removed to prevent it from being captured in the recording
 }
 
 /**
@@ -111,7 +110,7 @@ async function handleStopRecording(): Promise<void> {
 
   // Clear frame capture callback and hide visual indicators
   clearOnFrameCaptured();
-  hideRecordingBorder();
+  hideRecordingIndicator();
   updateStatusBarItems(false);
 
   if (frames.length === 0) {
@@ -120,8 +119,6 @@ async function handleStopRecording(): Promise<void> {
     );
     return;
   }
-
-  // Notification removed to prevent it from being captured if a new recording starts
 
   // Show preview and wait for user decision
   const userAction = await showPreview(frames);
@@ -151,7 +148,6 @@ async function handleStopRecording(): Promise<void> {
 
   // Get configuration settings
   const configuration = vscode.workspace.getConfiguration('vscode-gif-recorder');
-  const algorithm = configuration.get<'octree' | 'neuquant'>('algorithm') ?? 'octree';
   const useOptimizer = configuration.get<boolean>('useOptimizer') ?? true;
   const threshold = configuration.get<number>('optimizerThreshold') ?? 90;
   const deduplicateFrames = configuration.get<boolean>('deduplicateFrames') ?? true;
@@ -166,23 +162,32 @@ async function handleStopRecording(): Promise<void> {
     {
       location: vscode.ProgressLocation.Notification,
       title: 'Converting to GIF',
-      cancellable: false,
+      cancellable: true,
     },
-    async (progress) => {
+    async (progress, cancellationToken) => {
+      const abortController = new AbortController();
+      cancellationToken.onCancellationRequested(() => abortController.abort());
+
       progress.report({ increment: 0, message: 'Processing frames...' });
 
       try {
-        const outputPath = await convertToGif(frames, {
-          outputPath: saveUri.fsPath,
-          fps: targetFps,
-          quality: quality,
-          algorithm: algorithm,
-          useOptimizer: useOptimizer,
-          threshold: threshold,
-          deduplicateFrames: deduplicateFrames,
-          deduplicationThreshold: deduplicationThreshold,
-          maxWidth: maxWidth,
-        });
+        const outputPath = await convertToGif(
+          frames,
+          {
+            outputPath: saveUri.fsPath,
+            fps: targetFps,
+            quality: quality,
+            useOptimizer: useOptimizer,
+            threshold: threshold,
+            deduplicateFrames: deduplicateFrames,
+            deduplicationThreshold: deduplicationThreshold,
+            maxWidth: maxWidth,
+          },
+          (increment, message) => {
+            progress.report({ increment, message });
+          },
+          abortController.signal
+        );
 
         progress.report({ increment: 100, message: 'Complete!' });
 
@@ -196,10 +201,12 @@ async function handleStopRecording(): Promise<void> {
           vscode.env.openExternal(vscode.Uri.file(outputPath));
         }
       } catch (error) {
-        vscode.window.showErrorMessage(
-          `Failed to create GIF: ${error instanceof Error ? error.message : String(error)}`
-        );
-        console.error('GIF conversion error:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (abortController.signal.aborted) {
+          vscode.window.showInformationMessage('GIF conversion was cancelled.');
+        } else {
+          vscode.window.showErrorMessage(`Failed to create GIF: ${errorMsg}`);
+        }
       }
     }
   );
@@ -210,8 +217,6 @@ async function handleStopRecording(): Promise<void> {
  * The extension is activated the very first time a command is executed.
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('vscode-gif-recorder is now active!');
-
   // Create status bar items for recording controls
   // Start recording button
   startRecordingStatusBarItem = vscode.window.createStatusBarItem(
@@ -255,7 +260,6 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(
           `Failed to stop recording: ${error instanceof Error ? error.message : String(error)}`
         );
-        console.error('Stop recording error:', error);
       }
     }
   );
@@ -265,7 +269,6 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.pauseRecording',
     () => {
       pauseRecording();
-      // Notification removed to prevent it from being captured in the recording
     }
   );
 
@@ -274,7 +277,6 @@ export function activate(context: vscode.ExtensionContext) {
     'vscode-gif-recorder.resumeRecording',
     () => {
       resumeRecording();
-      // Notification removed to prevent it from being captured in the recording
     }
   );
 
@@ -291,13 +293,14 @@ export function deactivate() {
   // Stop any active recording to prevent memory leaks
   stopRecording();
 
+  // Terminate any ongoing GIF conversion worker
+  terminateWorker();
+
   // Clean up resources
-  hideRecordingBorder();
+  hideRecordingIndicator();
   clearOnFrameCaptured();
 
   // Dispose status bar items
   startRecordingStatusBarItem?.dispose();
   stopRecordingStatusBarItem?.dispose();
-
-  console.log('vscode-gif-recorder is now deactivated.');
 }
