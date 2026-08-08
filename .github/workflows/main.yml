@@ -33,6 +33,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -48,8 +49,8 @@ jobs:
       - name: Lint
         run: pnpm exec biome lint .
 
-      - name: Run unit tests
-        run: pnpm exec mocha --ui tdd --reporter spec out/test/suite/gifProcessing.test.js
+      - name: Build & run unit tests
+        run: pnpm run test
 
   build-and-publish:
     needs: lint-and-test
