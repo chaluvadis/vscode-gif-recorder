@@ -1,6 +1,7 @@
 allowBuilds:
-  '@vscode/vsce-sign': set this to true or false
+  '@vscode/vsce-sign': true
   esbuild: true
-  keytar: set this to true or false
+  keytar: true
+
 minimumReleaseAgeExclude:
   - '@types/node@26.2.0'
