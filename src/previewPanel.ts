@@ -6,30 +6,16 @@ import * as vscode from 'vscode';
 import type { Frame } from './gifConverter';
 import { DEFAULT_FPS } from './recorder';
 
-// Maximum number of frames to cache (LRU eviction when exceeded)
 const MAX_CACHE_SIZE = 50;
 
-let currentPanel: vscode.WebviewPanel | undefined;
-let currentFrames: Frame[] = [];
-let previewCallback: ((action: 'save' | 'discard') => void) | undefined;
-
-/**
- * LRU Cache implementation for frame data.
- * Uses a Map which maintains insertion order, allowing LRU eviction.
- */
 class LRUCache<K, V> {
-  private cache: Map<K, V>;
-  private maxSize: number;
+  private cache = new Map<K, V>();
 
-  constructor(maxSize: number) {
-    this.cache = new Map();
-    this.maxSize = maxSize;
-  }
+  constructor(private maxSize: number) {}
 
   get(key: K): V | undefined {
     const value = this.cache.get(key);
     if (value !== undefined) {
-      // Move to end (most recently used)
       this.cache.delete(key);
       this.cache.set(key, value);
     }
@@ -37,12 +23,9 @@ class LRUCache<K, V> {
   }
 
   set(key: K, value: V): void {
-    // Remove if exists (to update position)
     if (this.cache.has(key)) {
       this.cache.delete(key);
-    }
-    // Evict oldest if at capacity
-    else if (this.cache.size >= this.maxSize) {
+    } else if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey !== undefined) {
         this.cache.delete(firstKey);
@@ -60,117 +43,136 @@ class LRUCache<K, V> {
   }
 }
 
-const frameCache = new LRUCache<number, string>(MAX_CACHE_SIZE);
+class PreviewPanel {
+  private panel: vscode.WebviewPanel | undefined;
+  private frames: Frame[] = [];
+  private resolveCallback: ((action: 'save' | 'discard') => void) | undefined;
+  private isDisposing = false;
+  private frameCache = new LRUCache<number, string>(MAX_CACHE_SIZE);
 
-/**
- * Shows a preview of the recorded frames in a webview panel.
- *
- * @param frames - Array of captured frames to preview
- * @returns Promise that resolves with 'save' or 'discard' based on user action
- */
-export async function showPreview(frames: Frame[]): Promise<'save' | 'discard'> {
-  // Prevent concurrent preview calls
-  if (currentPanel && previewCallback) {
-    vscode.window.showWarningMessage(
-      'A preview is already open. Please save or discard the current recording first.'
-    );
-    throw new Error('Preview already active');
-  }
-
-  return new Promise((resolve) => {
-    currentFrames = frames;
-    previewCallback = resolve;
-    frameCache.clear(); // Clear cache for new preview
-
-    if (currentPanel) {
-      // If panel already exists, reveal it
-      currentPanel.reveal(vscode.ViewColumn.One);
-    } else {
-      // Create new panel
-      currentPanel = vscode.window.createWebviewPanel(
-        'gifPreview',
-        'GIF Recording Preview',
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true,
-          retainContextWhenHidden: true,
-        }
+  async show(frames: Frame[]): Promise<'save' | 'discard'> {
+    if (this.panel && this.resolveCallback) {
+      vscode.window.showWarningMessage(
+        'A preview is already open. Please save or discard the current recording first.'
       );
-
-      // Handle panel disposal
-      currentPanel.onDidDispose(() => {
-        currentPanel = undefined;
-        frameCache.clear(); // Clear cache to free memory
-        if (previewCallback) {
-          previewCallback('discard');
-          previewCallback = undefined;
-        }
-      });
-
-      // Handle messages from the webview
-      currentPanel.webview.onDidReceiveMessage((message) => {
-        switch (message.command) {
-          case 'save':
-            if (previewCallback) {
-              previewCallback('save');
-              previewCallback = undefined;
-            }
-            currentPanel?.dispose();
-            break;
-          case 'discard':
-            if (previewCallback) {
-              previewCallback('discard');
-              previewCallback = undefined;
-            }
-            currentPanel?.dispose();
-            break;
-          case 'getFrame':
-            sendFrameToWebview(message.index);
-            break;
-        }
-      });
+      throw new Error('Preview already active');
     }
 
-    // Set the webview content
-    currentPanel.webview.html = getWebviewContent(frames.length);
+    return new Promise((resolve) => {
+      this.frames = frames;
+      this.resolveCallback = resolve;
+      this.isDisposing = false;
+      this.frameCache.clear();
 
-    // Send first frame
-    sendFrameToWebview(0);
-  });
-}
+      if (this.panel) {
+        this.panel.reveal(vscode.ViewColumn.One);
+      } else {
+        this.createPanel();
+      }
 
-/**
- * Sends a specific frame to the webview for display.
- * Uses caching to avoid repeated base64 encoding of the same frame.
- */
-const sendFrameToWebview = (index: number): void => {
-  if (!currentPanel || index < 0 || index >= currentFrames.length) {
-    return;
+      if (this.panel?.webview) {
+        this.panel.webview.html = this.getWebviewContent(frames.length);
+        this.sendFrameToWebview(0);
+      }
+    });
   }
 
-  // Check cache first
-  let base64Image = frameCache.get(index);
+  private createPanel(): void {
+    this.panel = vscode.window.createWebviewPanel(
+      'gifPreview',
+      'GIF Recording Preview',
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+      }
+    );
 
-  if (!base64Image) {
-    // Encode and cache if not already cached
-    const frame = currentFrames[index];
-    base64Image = frame.data.toString('base64');
-    frameCache.set(index, base64Image);
+    this.panel.onDidDispose(async () => {
+      this.panel = undefined;
+      this.frameCache.clear();
+
+      if (this.resolveCallback && !this.isDisposing && this.frames.length > 0) {
+        const savedFrames = [...this.frames];
+        this.frames = [];
+
+        const confirm = await vscode.window.showWarningMessage(
+          'Discard this recording?',
+          'Discard',
+          'Keep'
+        );
+
+        if (confirm === 'Keep' && savedFrames.length > 0) {
+          const oldResolve = this.resolveCallback;
+          this.resolveCallback = undefined;
+          void this.show(savedFrames).then((action) => {
+            oldResolve(action);
+          });
+        } else {
+          this.resolveCallback('discard');
+          this.resolveCallback = undefined;
+        }
+      } else if (this.resolveCallback) {
+        this.resolveCallback('discard');
+        this.resolveCallback = undefined;
+      }
+    });
+
+    this.panel.webview.onDidReceiveMessage((message) => {
+      switch (message.command) {
+        case 'save':
+          if (this.resolveCallback) {
+            this.isDisposing = true;
+            this.resolveCallback('save');
+            this.resolveCallback = undefined;
+          }
+          this.frames = [];
+          this.frameCache.clear();
+          this.panel?.dispose();
+          break;
+        case 'discard':
+          if (this.resolveCallback) {
+            this.isDisposing = true;
+            this.resolveCallback('discard');
+            this.resolveCallback = undefined;
+          }
+          this.frames = [];
+          this.frameCache.clear();
+          this.panel?.dispose();
+          break;
+        case 'getFrame':
+          this.sendFrameToWebview(message.index);
+          break;
+      }
+    });
   }
 
-  currentPanel.webview.postMessage({
-    command: 'displayFrame',
-    index: index,
-    data: `data:image/png;base64,${base64Image}`,
-    totalFrames: currentFrames.length,
-  });
-};
+  private sendFrameToWebview(index: number): void {
+    if (!this.panel || index < 0 || index >= this.frames.length) {
+      return;
+    }
 
-/**
- * Generates the HTML content for the webview.
- */
-const getWebviewContent = (frameCount: number): string => {
-  return `<!DOCTYPE html>
+    let base64Image = this.frameCache.get(index);
+
+    if (!base64Image) {
+      const frame = this.frames[index];
+      if (!frame) {
+        return;
+      }
+      base64Image = frame.data.toString('base64');
+      this.frameCache.set(index, base64Image);
+    }
+
+    this.panel.webview.postMessage({
+      command: 'displayFrame',
+      index,
+      data: `data:image/png;base64,${base64Image}`,
+      totalFrames: this.frames.length,
+    });
+  }
+
+  private getWebviewContent(frameCount: number): string {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -446,4 +448,10 @@ const getWebviewContent = (frameCount: number): string => {
     </script>
 </body>
 </html>`;
-};
+  }
+}
+
+const previewPanel = new PreviewPanel();
+
+export const showPreview = (frames: Frame[]): Promise<'save' | 'discard'> =>
+  previewPanel.show(frames);

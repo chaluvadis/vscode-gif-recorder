@@ -1,10 +1,17 @@
 declare module 'screenshot-desktop' {
   interface ScreenshotOptions {
-    format?: 'png' | 'jpg';
-    screen?: number;
+    format?: 'png' | 'jpg' | 'jpeg';
+    screen?: number | number[];
+    childProcess?: boolean;
   }
 
-  function screenshot(options?: ScreenshotOptions): Promise<Buffer>;
-  
-  export = screenshot;
+  interface ScreenshotDesktop {
+    (options?: ScreenshotOptions | string): Promise<Buffer>;
+    all(options?: ScreenshotOptions): Promise<Buffer[]>;
+    listDisplays(): Promise<string[]>;
+    parseDisplaysOutput(output: string): unknown;
+  }
+
+  const screenshotDesktop: ScreenshotDesktop;
+  export = screenshotDesktop;
 }
